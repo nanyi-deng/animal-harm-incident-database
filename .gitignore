@@ -3,6 +3,9 @@ data/raw/
 data/media/
 data/internal/
 pipeline/archive/
+pipeline/audit_data.json
+pipeline/audit_tool_items.json
+pipeline/gold_standard_audit_tool.html
 *.sqlite
 *.sqlite3
 *.db

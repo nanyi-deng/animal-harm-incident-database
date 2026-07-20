@@ -1,0 +1,369 @@
+<!doctype html>
+<html lang="zh-Hans">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>AHID Gold-Standard 审计工具</title>
+<style>
+  :root {
+    --bg: #fafaf8; --bg-raised: #fff; --text: #1a1a18; --text-muted: #5c5c58;
+    --border: #e2e0da; --accent: #7a3b2e; --accent-soft: #f3e8e4;
+    --ok: #2f5233; --warn: #8a6a1e; --bad: #a13b2e;
+  }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--text); font-family:-apple-system,'PingFang SC','Hiragino Sans GB',sans-serif; line-height:1.6; padding-bottom:120px; }
+  header { position:sticky; top:0; background:var(--bg); border-bottom:1px solid var(--border); padding:10px 20px; z-index:10; }
+  .progress-bar { height:6px; background:var(--border); border-radius:3px; overflow:hidden; margin-top:8px; }
+  .progress-fill { height:100%; background:var(--accent); transition:width .2s; }
+  .progress-map { display:flex; flex-wrap:wrap; gap:3px; margin-top:8px; max-height:60px; overflow-y:auto; }
+  .chip { width:16px; height:16px; border-radius:3px; background:var(--border); cursor:pointer; font-size:0; }
+  .chip.done { background:var(--ok); }
+  .chip.current { outline:2px solid var(--accent); outline-offset:1px; }
+  .top-meta { display:flex; justify-content:space-between; align-items:center; font-size:.85rem; color:var(--text-muted); }
+  main { max-width: 900px; margin: 0 auto; padding: 20px; }
+  .card { border:1px solid var(--border); border-radius:8px; background:var(--bg-raised); padding:16px 18px; margin-bottom:16px; }
+  .badge { display:inline-block; padding:2px 8px; border-radius:999px; font-size:.75rem; font-weight:600; color:#fff; background:var(--text-muted); margin-right:6px; }
+  .badge-AF, .badge-AX { background:var(--bad); }
+  .badge-A4, .badge-A3 { background:var(--ok); }
+  table { width:100%; border-collapse:collapse; font-size:.88rem; }
+  th, td { text-align:left; padding:6px 8px; border-bottom:1px solid var(--border); vertical-align:top; }
+  th { color:var(--text-muted); font-weight:500; font-size:.78rem; }
+  tr.contradicted { background: var(--accent-soft); }
+  .source-block { border:1px solid var(--border); border-radius:6px; padding:10px 12px; margin-bottom:10px; }
+  .source-text { white-space:pre-wrap; max-height:220px; overflow-y:auto; background:var(--bg); border-radius:4px; padding:8px 10px; font-size:.85rem; margin-top:6px; }
+  .section-label { font-size:.75rem; text-transform:uppercase; letter-spacing:.05em; color:var(--text-muted); margin-bottom:6px; }
+  .btn-row { display:flex; flex-wrap:wrap; gap:8px; margin:8px 0; }
+  button.opt { padding:7px 14px; border-radius:6px; border:1px solid var(--border); background:var(--bg-raised); cursor:pointer; font:inherit; font-size:.88rem; }
+  button.opt.selected { background:var(--accent); color:#fff; border-color:var(--accent); }
+  button.opt.bad-selected { background:var(--bad); color:#fff; border-color:var(--bad); }
+  button.opt.warn-selected { background:var(--warn); color:#fff; border-color:var(--warn); }
+  label.chk { display:inline-flex; align-items:center; gap:6px; margin-right:16px; font-size:.9rem; cursor:pointer; }
+  textarea { width:100%; font:inherit; padding:8px 10px; border-radius:6px; border:1px solid var(--border); background:var(--bg-raised); color:var(--text); resize:vertical; }
+  .quick-ok { padding:10px 14px; border:1px dashed var(--ok); border-radius:6px; margin-bottom:14px; }
+  footer { position:fixed; bottom:0; left:0; right:0; background:var(--bg-raised); border-top:1px solid var(--border); padding:10px 20px; display:flex; gap:10px; justify-content:center; }
+  footer button { padding:8px 16px; border-radius:6px; border:1px solid var(--border); background:var(--bg-raised); cursor:pointer; font:inherit; }
+  .modal-backdrop { position:fixed; inset:0; background:rgba(0,0,0,.4); display:none; align-items:center; justify-content:center; z-index:50; }
+  .modal { background:var(--bg-raised); border-radius:8px; padding:20px; max-width:600px; width:90%; }
+  .modal textarea { height:200px; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="top-meta">
+    <span id="counter">0 / 0</span>
+    <span id="progress-pct">已评 0%</span>
+  </div>
+  <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+  <div class="progress-map" id="progress-map"></div>
+</header>
+
+<main id="main"></main>
+
+<footer>
+  <button onclick="go(-1)">← 上一条 (←)</button>
+  <button onclick="go(1)">下一条 (→)</button>
+  <button onclick="nextUnrated()">跳到下一个未评</button>
+  <button onclick="exportCSV()">导出 CSV</button>
+  <button onclick="resetAll()">清空全部</button>
+</footer>
+
+<div class="modal-backdrop" id="modal-backdrop">
+  <div class="modal">
+    <p><strong>CSV 导出</strong> — 自动下载可能被浏览器拦截，以下文本已自动选中，可直接 Cmd/Ctrl+C 复制：</p>
+    <textarea id="modal-textarea" readonly></textarea>
+    <div style="margin-top:10px; display:flex; gap:8px;">
+      <button onclick="copyModalText()">复制到剪贴板</button>
+      <button onclick="document.getElementById('modal-backdrop').style.display='none'">关闭</button>
+    </div>
+  </div>
+</div>
+
+<script>
+var ITEMS = __ITEMS_JSON__;
+
+var STORAGE_KEY = 'ahid_gold_audit_v1';
+var POS_KEY = 'ahid_gold_audit_pos_v1';
+
+var ch = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+var idx = parseInt(localStorage.getItem(POS_KEY) || '0', 10);
+if (idx < 0 || idx >= ITEMS.length) idx = 0;
+
+function save() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(ch));
+  localStorage.setItem(POS_KEY, String(idx));
+}
+
+function ensure(id) {
+  if (!ch[id]) {
+    ch[id] = {
+      quick_ok: false, verdict: '',
+      date_wrong: false, location_wrong: false, animal_type_wrong: false,
+      harm_method_wrong: false, official_response_wrong: false,
+      independence_verdict: '', contradiction_notes: '', notes: ''
+    };
+  }
+  return ch[id];
+}
+
+function isDone(id) {
+  var c = ch[id];
+  return !!c && (c.quick_ok || !!c.verdict);
+}
+
+function statusLabel(s) {
+  var m = { supported: '支持', partially_supported: '部分支持', contradicted: '矛盾', claimed_only: '仅陈述', unknown: '未知' };
+  return m[s] || s;
+}
+
+function esc(s) {
+  if (s === null || s === undefined) return '';
+  return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+function renderProgressMap() {
+  var map = document.getElementById('progress-map');
+  map.innerHTML = '';
+  for (var i = 0; i < ITEMS.length; i++) {
+    var el = document.createElement('div');
+    el.className = 'chip' + (isDone(ITEMS[i].id) ? ' done' : '') + (i === idx ? ' current' : '');
+    el.title = ITEMS[i].id;
+    (function (j) { el.onclick = function () { idx = j; save(); render(); window.scrollTo(0, 0); }; })(i);
+    map.appendChild(el);
+  }
+  var doneCount = ITEMS.filter(function (it) { return isDone(it.id); }).length;
+  document.getElementById('counter').textContent = (idx + 1) + ' / ' + ITEMS.length;
+  document.getElementById('progress-pct').textContent = '已评 ' + doneCount + '/' + ITEMS.length +
+    ' (' + Math.round(100 * doneCount / ITEMS.length) + '%)';
+  document.getElementById('progress-fill').style.width = (100 * doneCount / ITEMS.length) + '%';
+}
+
+function renderClaims(item) {
+  if (!item.claims.length) return '<p style="color:var(--text-muted);">无 claims 记录。</p>';
+  var rows = item.claims.map(function (c) {
+    var cls = c.support_status === 'contradicted' ? ' class="contradicted"' : '';
+    return '<tr' + cls + '><td>' + esc(c.claim_type) + '</td><td>' + esc(c.claim_value) + '</td><td>' +
+      statusLabel(c.support_status) + '</td><td>' + esc(c.confidence_category) + '</td></tr>';
+  }).join('');
+  return '<table><thead><tr><th>类型</th><th>内容</th><th>支持状态</th><th>置信度</th></tr></thead><tbody>' + rows + '</tbody></table>';
+}
+
+function renderSources(item) {
+  return item.sources.map(function (s) {
+    var text = s.extracted_text
+      ? '<div class="source-text">' + esc(s.extracted_text) + '</div>'
+      : '<p style="color:var(--text-muted); font-size:.85rem;">（未归档到有效正文，availability=' + esc(s.availability_status) + '）</p>';
+    return '<div class="source-block"><strong>' + esc(s.source_name) + '</strong> · Tier ' + esc(s.source_tier) +
+      ' · independence=' + esc(s.independence_status) + ' · availability=' + esc(s.availability_status) +
+      '<br><a href="' + esc(s.original_url) + '" target="_blank" rel="noopener">' + esc(s.original_url) + '</a>' +
+      text + '</div>';
+  }).join('');
+}
+
+function renderDependencyLog(item) {
+  if (!item.dependency_log.length) return '<p style="color:var(--text-muted);">仅单一来源，无需比较。</p>';
+  var rows = item.dependency_log.map(function (d) {
+    return '<tr><td>' + esc(d.source_id_a) + ' vs ' + esc(d.source_id_b) + '</td><td>' +
+      (d.text_similarity_ratio != null ? d.text_similarity_ratio.toFixed(3) : '—') + '</td><td>' +
+      esc(d.citation_signal || '—') + '</td><td>' + esc(d.decision) + '</td></tr>';
+  }).join('');
+  return '<table><thead><tr><th>来源对</th><th>相似度</th><th>引用信号</th><th>判定</th></tr></thead><tbody>' + rows + '</tbody></table>';
+}
+
+function toggleBool(id, field) {
+  var c = ensure(id);
+  c[field] = !c[field];
+  save();
+  render();
+}
+
+function setIndependence(id, val) {
+  var c = ensure(id);
+  c.independence_verdict = (c.independence_verdict === val) ? '' : val;
+  save();
+  render();
+}
+
+function setVerdict(id, val) {
+  var c = ensure(id);
+  var wasEmpty = !c.verdict;
+  var turningOff = c.verdict === val;
+  c.verdict = turningOff ? '' : val;
+  save();
+  render();
+  if (!turningOff && c.verdict) {
+    setTimeout(function () {
+      if (idx < ITEMS.length - 1) { idx++; save(); render(); window.scrollTo(0, 0); }
+      else { alert('已完成全部 ' + ITEMS.length + ' 条事件的评审！'); }
+    }, 280);
+  }
+}
+
+function toggleQuickOk(id) {
+  var c = ensure(id);
+  c.quick_ok = !c.quick_ok;
+  save();
+  render();
+  if (c.quick_ok) {
+    setTimeout(function () {
+      if (idx < ITEMS.length - 1) { idx++; save(); render(); window.scrollTo(0, 0); }
+      else { alert('已完成全部 ' + ITEMS.length + ' 条事件的评审！'); }
+    }, 280);
+  }
+}
+
+function updateText(id, field, val) {
+  var c = ensure(id);
+  c[field] = val;
+  save();
+}
+
+function render() {
+  var item = ITEMS[idx];
+  var c = ensure(item.id);
+  var inc = item.incident;
+
+  var html = '';
+  html += '<div class="card">';
+  html += '<span class="badge badge-' + esc(inc.automation_status) + '">' + esc(inc.automation_status) + '</span>';
+  html += '<span class="badge" style="background:#5c5c58;">分数 ' + esc(inc.evidence_sufficiency_score) + '/100</span>';
+  if (inc.disputed_flag) html += '<span class="badge" style="background:var(--bad);">争议</span>';
+  if (inc.misattribution_flag) html += '<span class="badge" style="background:var(--bad);">AF</span>';
+  html += '<h2 style="margin:8px 0 4px;">' + esc(item.id) + '</h2>';
+  html += '<p style="color:var(--text-muted); margin:0;">' + esc(inc.province) + ' ' + esc(inc.city) + ' · ' +
+    esc(inc.event_date_start) + ' · ' + esc(inc.animal_category) + ' · ' + esc(inc.harm_categories) + '</p>';
+  html += '</div>';
+
+  html += '<div class="card"><div class="section-label">Claims</div>' + renderClaims(item) + '</div>';
+  html += '<div class="card"><div class="section-label">来源正文（核对依据）</div>' + renderSources(item) + '</div>';
+  html += '<div class="card"><div class="section-label">来源依赖判定</div>' + renderDependencyLog(item) + '</div>';
+
+  html += '<div class="card">';
+  html += '<div class="quick-ok"><label class="chk"><input type="checkbox" ' + (c.quick_ok ? 'checked' : '') +
+    ' onchange="toggleQuickOk(\'' + item.id + '\')"> 确认无误，跳过（快速通过）</label></div>';
+
+  html += '<div class="section-label">哪些字段有问题？（勾选=有问题）</div><div class="btn-row">';
+  var dims = [
+    ['date_wrong', '日期'], ['location_wrong', '地点'], ['animal_type_wrong', '动物类型'],
+    ['harm_method_wrong', '伤害方式'], ['official_response_wrong', '官方回应'],
+  ];
+  dims.forEach(function (d) {
+    html += '<label class="chk"><input type="checkbox" ' + (c[d[0]] ? 'checked' : '') +
+      ' onchange="toggleBool(\'' + item.id + '\',\'' + d[0] + '\')"> ' + d[1] + '</label>';
+  });
+  html += '</div>';
+
+  html += '<div class="section-label">来源独立性判断是否合理？</div><div class="btn-row">';
+  ['合理', '不合理', '不适用'].forEach(function (v) {
+    html += '<button class="opt' + (c.independence_verdict === v ? ' selected' : '') + '" onclick="setIndependence(\'' +
+      item.id + '\',\'' + v + '\')">' + v + '</button>';
+  });
+  html += '</div>';
+
+  html += '<div class="section-label">矛盾记录是否恰当？有无遗漏？</div>' +
+    '<textarea rows="2" placeholder="留空表示无意见" onchange="updateText(\'' + item.id + '\',\'contradiction_notes\',this.value)">' +
+    esc(c.contradiction_notes) + '</textarea>';
+
+  html += '<div class="section-label" style="margin-top:10px;">具体问题描述（自由文本）</div>' +
+    '<textarea rows="3" onchange="updateText(\'' + item.id + '\',\'notes\',this.value)">' + esc(c.notes) + '</textarea>';
+
+  html += '<div class="section-label" style="margin-top:14px;">总体判断</div><div class="btn-row">';
+  var verdicts = [['一致', ''], ['轻微问题', 'warn-selected'], ['重大问题', 'bad-selected']];
+  verdicts.forEach(function (v) {
+    var selCls = c.verdict === v[0] ? (v[1] || ' selected') : '';
+    html += '<button class="opt' + (c.verdict === v[0] ? (v[1] ? ' ' + v[1] : ' selected') : '') +
+      '" onclick="setVerdict(\'' + item.id + '\',\'' + v[0] + '\')">' + v[0] + '</button>';
+  });
+  html += '</div>';
+  html += '</div>';
+
+  document.getElementById('main').innerHTML = html;
+  renderProgressMap();
+}
+
+function go(delta) {
+  idx = Math.max(0, Math.min(ITEMS.length - 1, idx + delta));
+  save();
+  render();
+  window.scrollTo(0, 0);
+}
+
+function nextUnrated() {
+  for (var i = 0; i < ITEMS.length; i++) {
+    if (!isDone(ITEMS[i].id)) { idx = i; save(); render(); window.scrollTo(0, 0); return; }
+  }
+  alert('所有事件都已评审。');
+}
+
+function resetAll() {
+  if (!confirm('清空全部评审记录？此操作不可撤销。')) return;
+  ch = {};
+  idx = 0;
+  save();
+  render();
+  window.scrollTo(0, 0);
+}
+
+function csvField(v) {
+  v = (v === null || v === undefined) ? '' : String(v);
+  if (/[",\n]/.test(v)) v = '"' + v.replace(/"/g, '""') + '"';
+  return v;
+}
+
+function exportCSV() {
+  var header = ['incident_id', 'quick_ok', 'verdict', 'date_wrong', 'location_wrong', 'animal_type_wrong',
+    'harm_method_wrong', 'official_response_wrong', 'independence_verdict', 'contradiction_notes', 'notes'];
+  var rows = [header.join(',')];
+  ITEMS.forEach(function (item) {
+    var c = ch[item.id] || {};
+    rows.push([
+      item.id, c.quick_ok ? 'TRUE' : 'FALSE', c.verdict || '', c.date_wrong ? 'TRUE' : 'FALSE',
+      c.location_wrong ? 'TRUE' : 'FALSE', c.animal_type_wrong ? 'TRUE' : 'FALSE',
+      c.harm_method_wrong ? 'TRUE' : 'FALSE', c.official_response_wrong ? 'TRUE' : 'FALSE',
+      c.independence_verdict || '', c.contradiction_notes || '', c.notes || ''
+    ].map(csvField).join(','));
+  });
+  var csv = '﻿' + rows.join('\r\n');
+
+  try {
+    var blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = 'ahid_gold_audit_results.csv';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+  } catch (e) { /* fall through to modal regardless */ }
+
+  document.getElementById('modal-textarea').value = csv;
+  document.getElementById('modal-backdrop').style.display = 'flex';
+  setTimeout(function () { document.getElementById('modal-textarea').select(); }, 50);
+}
+
+function copyModalText() {
+  var ta = document.getElementById('modal-textarea');
+  (async function () {
+    try {
+      await navigator.clipboard.writeText(ta.value);
+      alert('已复制到剪贴板。');
+    } catch (e) {
+      ta.select();
+      try { document.execCommand('copy'); alert('已复制到剪贴板。'); }
+      catch (e2) { alert('自动复制失败，请手动 Cmd/Ctrl+C。'); }
+    }
+  })();
+}
+
+document.addEventListener('keydown', function (e) {
+  var tag = (e.target && e.target.tagName) || '';
+  if (tag === 'TEXTAREA' || tag === 'INPUT') return;
+  if (e.key === 'ArrowLeft') go(-1);
+  else if (e.key === 'ArrowRight') go(1);
+});
+
+render();
+</script>
+</body>
+</html>
