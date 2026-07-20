@@ -65,6 +65,16 @@ INCIDENT_CORRECTIONS = {
     "AHID-CN-2026-0009": {  # seed #9, 徐志辉 -- real name per HRL-015; location was unset
         "province": "安徽省", "city": "阜阳市", "location_precision": "district",
     },
+    "AHID-CN-2026-0014": {  # seed #15, 郑州大学张某 -- false-report test case. This incident's
+        # own core claim (event_occurred) is support_status='contradicted' -- the abuse never
+        # happened, per the joint school/police investigation. disputed_flag must reflect that,
+        # otherwise Stage 4 scoring has no signal to avoid classifying this as A4 "authoritatively
+        # documented" just because a school disciplinary response exists (which it does, but for
+        # the false report itself, not for animal cruelty). Caught by inspecting Stage 4's first
+        # run: this incident scored A4 before this fix, which is exactly backwards for a case
+        # whose entire point is that the accusation was false.
+        "disputed_flag": 1,
+    },
     "AHID-CN-2026-0010": {  # seed #10, 宿迁动物园
         "species": "梅花鹿、黑熊",
     },
