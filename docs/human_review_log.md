@@ -5,8 +5,8 @@
 | ID | 提出日期 | 事项 | 需要的决策/核实 | 状态 | 决定 | 决定日期 |
 |---|---|---|---|---|---|---|
 | HRL-001 | 2026-07-20 | 项目定名 | 选定项目名与数据集命名体系 | DECIDED | AHID（Animal Harm Incident Database / 动物伤害事件数据库）；首期语料 AHID-CN；数据包 `ahid-cn-dataset-vX.Y` | 2026-07-20 |
-| HRL-002 | 2026-07-20 | 署名与运营方式 | 实名运营 vs 机构挂靠 vs 团队名义；数据托管司法辖区；家属风险评估。**阻塞：repo/OSF 公开** | PENDING | | |
-| HRL-003 | 2026-07-20 | GitHub 可见性 | 是否建 GitHub 远程仓库、公开时点（建议：HRL-002 决定后再公开） | PENDING | | |
+| HRL-002 | 2026-07-20 | 署名与运营方式 | 实名运营 vs 机构挂靠 vs 团队名义；数据托管司法辖区；家属风险评估 | PARTIALLY DECIDED | 代码/文档层：实名，托管于个人 GitHub 账号 nanyi-deng（隐含决定，2026-07-27 提供仓库 URL 时确认）。**仍开放**：家属风险评估尚未走过一遍；数据集/网站层的署名方式（是否与代码层一致）待 10 月发布前最终确认 | 2026-07-27（部分） |
+| HRL-003 | 2026-07-20 | GitHub 可见性 | 是否建 GitHub 远程仓库、公开时点 | DECIDED | 仓库已建：https://github.com/nanyi-deng/animal-harm-incident-database（用户提供，2026-07-27）。首次 push 时仓库内容为 PRD/schema/方法论骨架，不含任何已采集事件数据 | 2026-07-27 |
 | HRL-004 | 2026-07-20 | IRB determination | 提交哪所机构、何时提交（8 月材料由 AI 起草，提交须本人） | PENDING | | |
 | HRL-005 | 2026-07-20 | License | 建议：结构化数据 CC BY 4.0；代码 MIT；第三方内容权利保留声明。需确认 | PENDING | | |
 | HRL-006 | 2026-07-20 | 域名 | animalharmdatabase.org 与 ahid-cn.org 均可注册（2026-07-20 查证）；ahid.org 已被占用。是否购买、买哪个 | PENDING | | |

@@ -8,5 +8,4 @@ authors:
   - family-names: "Deng"
     given-names: "Nanyi"
     # TODO(HRL-011): confirm academic name form and add ORCID iD
-repository-code: "https://github.com/nanyi-deng/ahid"
-# TODO(HRL-003): repository URL pending GitHub visibility decision
+repository-code: "https://github.com/nanyi-deng/animal-harm-incident-database"
