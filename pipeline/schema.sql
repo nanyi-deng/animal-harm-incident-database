@@ -70,6 +70,21 @@ CREATE TABLE IF NOT EXISTS sources_public (
     needs_primary_source_verification INTEGER DEFAULT 0  -- internal only: from HRL-007 review notes
 );
 
+-- Internal only, not part of the public data_dictionary.csv export.
+-- Stage 1 (archiving) writes here; sources_public.first_collected_at /
+-- availability_status are the public-facing fields it also updates.
+CREATE TABLE IF NOT EXISTS archive_log (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    source_id TEXT NOT NULL REFERENCES sources_public(source_id),
+    fetched_at TEXT NOT NULL,
+    http_status INTEGER,
+    sha256_hex TEXT,
+    content_length INTEGER,
+    page_title TEXT,
+    local_snapshot_path TEXT,
+    error_message TEXT
+);
+
 CREATE TABLE IF NOT EXISTS claims_public (
     claim_id TEXT PRIMARY KEY,
     incident_id TEXT NOT NULL REFERENCES incidents_public(incident_id),

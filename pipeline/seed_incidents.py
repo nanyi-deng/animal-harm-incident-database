@@ -200,13 +200,18 @@ SOURCES = {
         ("https://www.163.com/dy/article/KSU40KLG0550LJ66.html", "网易", "news", "3", None),
     ],
     3: [("https://m.mp.oeeee.com/a/BAAFRD000020240719976606.html", "南方都市报", "news", "2", "2024-07-19")],
-    4: [("https://www.zhihu.com/question/1920061492117640254/answer/1920412957826851731",
-         "知乎（引用海大通报）", "blog", "3", None)],
+    4: [
+        ("https://news.cctv.com/2025/06/22/ARTI3mFywdSCwZEoWipFdWqd250622.shtml", "央视网", "news", "1", "2025-06-22"),
+        ("https://finance.sina.com.cn/roll/2025-06-25/doc-infcfxpq8273201.shtml", "新浪财经", "news", "2", "2025-06-25"),
+    ],
     5: [
         ("https://news.cctv.com/2024/12/07/ARTITlG6kaHFh2VV0jQaUJPa241207.shtml", "央视网", "news", "1", "2024-12-07"),
         ("https://news.qq.com/rain/a/20241207A04CVI00", "腾讯新闻", "news", "2", "2024-12-07"),
     ],
-    6: [("https://www.zhihu.com/question/386412537", "知乎讨论帖", "blog", "3", None)],
+    6: [
+        ("https://h5.cqliving.com/info/detail/2456129.html?cid=2456129&cqxhlwdc=3f", "华龙网", "news", "2", "2020-04"),
+        ("https://news.qingdaonews.com/wap/2020-04/10/content_21555517.htm", "青岛新闻网", "news", "2", "2020-04-10"),
+    ],
     7: [
         ("https://m.thepaper.cn/newsDetail_forward_24488202", "澎湃新闻", "news", "2", "2023-09-02"),
         ("https://news.qq.com/rain/a/20230902A054B200", "腾讯新闻", "news", "2", "2023-09-02"),

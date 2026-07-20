@@ -2,6 +2,7 @@
 data/raw/
 data/media/
 data/internal/
+pipeline/archive/
 *.sqlite
 *.sqlite3
 *.db
