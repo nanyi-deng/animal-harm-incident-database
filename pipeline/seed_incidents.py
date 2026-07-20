@@ -68,7 +68,7 @@ INCIDENTS = [
          minor_involvement="no", institutional_involvement="unknown",
          commercial_involvement="no", group_involvement="no",
          content_creation_involvement="no", is_test_case=0,
-         inclusion_note="收录；一手来源待归档阶段二次核实"),
+         inclusion_note="收录；一手来源已补齐（2026-07-27 二次搜索：央视网+腾讯新闻）"),
     dict(seed_no=6, province="山东省", city="淄博市", location_precision="city",
          date_start="2020", date_precision="year", date_status="officially_reported",
          animal_category="cat", estimated_animal_count="80", juvenile_animal="unknown",
@@ -78,21 +78,22 @@ INCIDENTS = [
          content_creation_involvement="yes", is_test_case=0,
          inclusion_note="收录；历史性案例，推动过反虐待动物立法讨论"),
     dict(seed_no=7, province="河南省", city="南阳市", location_precision="city",
-         date_start="2023", date_precision="year", date_status="officially_reported",
+         date_start="2023-08-27", date_precision="day", date_status="officially_reported",
          animal_category="cat", estimated_animal_count=None, juvenile_animal="unknown",
          mortality_status="unknown", harm_categories="content_motivated_abuse",
          minor_involvement="no", institutional_involvement="unknown",
          commercial_involvement="no", group_involvement="no",
          content_creation_involvement="yes", is_test_case=0,
-         inclusion_note="收录；一手通报链接待归档阶段二次核实"),
+         inclusion_note="收录；一手来源已补齐（2026-07-27 二次搜索：澎湃新闻+腾讯新闻）；开除决定于 2023-09-02，另有警方行拘 7 日"),
     dict(seed_no=8, province="江苏省", city="南京市", location_precision="city",
-         date_start=None, date_precision="unknown", date_status="claimed_only",
+         date_start="2024-04", date_precision="month", date_status="officially_reported",
          animal_category="cat", estimated_animal_count=None, juvenile_animal="unknown",
          mortality_status="unknown", harm_categories="other_harm",
          minor_involvement="no", institutional_involvement="yes",
          commercial_involvement="no", group_involvement="no",
-         content_creation_involvement="unknown", is_test_case=0,
-         inclusion_note="收录；事件核心是机构后续（拒录），非施虐行为本身；一手来源待核实"),
+         content_creation_involvement="yes", is_test_case=0,
+         inclusion_note="收录；一手来源已补齐（2026-07-27 二次搜索：央视网+光明网）；施虐发生于东南大学宿舍，"
+                         "机构后续（拒录）发生于南京大学，归档时两校均需体现；日期为拒录报道时间，非施虐时间（待核实）"),
     dict(seed_no=9, province=None, city=None, location_precision="unknown",
          date_start="2023", date_precision="year", date_status="officially_reported",
          animal_category="cat", estimated_animal_count=None, juvenile_animal="unknown",
@@ -100,14 +101,14 @@ INCIDENTS = [
          minor_involvement="no", institutional_involvement="no",
          commercial_involvement="no", group_involvement="no",
          content_creation_involvement="yes", is_test_case=0, inclusion_note="收录"),
-    dict(seed_no=10, province="江苏省", city="宿迁市", location_precision="city",
-         date_start=None, date_precision="unknown", date_status="claimed_only",
+    dict(seed_no=10, province="江苏省", city="宿迁市", location_precision="district",
+         date_start="2024-11-04", date_precision="day", date_status="officially_reported",
          animal_category="multiple", estimated_animal_count=None, juvenile_animal="unknown",
          mortality_status="unknown", harm_categories="medical_neglect|other_harm",
          minor_involvement="no", institutional_involvement="yes",
          commercial_involvement="yes", group_involvement="unknown",
          content_creation_involvement="no", is_test_case=0,
-         inclusion_note="收录；一手报道链接与日期待归档阶段二次核实"),
+         inclusion_note="收录；一手来源与日期已补齐（2026-07-27 二次搜索：澎湃新闻）；地点为沭阳县南湖公园动物园"),
     dict(seed_no=11, province="广西壮族自治区", city=None, location_precision="province",
          date_start=None, date_precision="unknown", date_status="claimed_only",
          animal_category="captive_wildlife", estimated_animal_count=None, juvenile_animal="unknown",
@@ -175,14 +176,14 @@ INCIDENTS = [
          content_creation_involvement="no", is_test_case=0,
          inclusion_note="收录；央视报道具体年份待归档阶段核实"),
     dict(seed_no=20, province="广东省", city="深圳市", location_precision="district",
-         date_start="2019", date_precision="year", date_status="claimed_only",
+         date_start="2019-04-07", date_precision="day", date_status="officially_reported",
          animal_category="other", estimated_animal_count="9", juvenile_animal="unknown",
          mortality_status="unknown", harm_categories="forced_fighting",
          minor_involvement="no", institutional_involvement="no",
          commercial_involvement="yes", group_involvement="yes",
          content_creation_involvement="no", is_test_case=0,
-         inclusion_note="收录（用户接受弱来源）；约束：归档阶段找不到一手来源则 automation_status "
-                         "上限为 A1，不进入公开数据集"),
+         inclusion_note="收录；原弱来源约束已解除（2026-07-27 二次搜索找到两条独立一手报道：澎湃新闻+都市时报，"
+                         "含具体日期/地点/涉案人数/处理结果，来源等级升级为 Tier 2）"),
 ]
 
 # One or more (original_url, source_name, source_type, source_tier, publication_date)
@@ -201,15 +202,24 @@ SOURCES = {
     3: [("https://m.mp.oeeee.com/a/BAAFRD000020240719976606.html", "南方都市报", "news", "2", "2024-07-19")],
     4: [("https://www.zhihu.com/question/1920061492117640254/answer/1920412957826851731",
          "知乎（引用海大通报）", "blog", "3", None)],
-    5: [],  # no directly citable URL from this round's search; needs a follow-up search pass
+    5: [
+        ("https://news.cctv.com/2024/12/07/ARTITlG6kaHFh2VV0jQaUJPa241207.shtml", "央视网", "news", "1", "2024-12-07"),
+        ("https://news.qq.com/rain/a/20241207A04CVI00", "腾讯新闻", "news", "2", "2024-12-07"),
+    ],
     6: [("https://www.zhihu.com/question/386412537", "知乎讨论帖", "blog", "3", None)],
-    7: [],  # needs a follow-up search pass for a primary link
-    8: [],  # needs a follow-up search pass for a primary link
+    7: [
+        ("https://m.thepaper.cn/newsDetail_forward_24488202", "澎湃新闻", "news", "2", "2023-09-02"),
+        ("https://news.qq.com/rain/a/20230902A054B200", "腾讯新闻", "news", "2", "2023-09-02"),
+    ],
+    8: [
+        ("https://news.cctv.com/2024/04/07/ARTIZp6CvXMIn8meOOA75WdM240407.shtml", "央视网", "news", "1", "2024-04-07"),
+        ("https://m.gmw.cn/2024-04/04/content_1303704302.htm", "光明网", "news", "2", "2024-04-04"),
+    ],
     9: [
         ("https://www.chinanews.com.cn/gsztc/2023/05-09/10004022.shtml", "中新网", "news", "2", "2023-05-09"),
         ("https://news.bjd.com.cn/2023/05/13/10429508.shtml", "北京日报", "news", "2", "2023-05-13"),
     ],
-    10: [],  # needs a follow-up search pass for a primary link
+    10: [("https://www.thepaper.cn/newsDetail_forward_4862028", "澎湃新闻", "news", "2", "2024-11-04")],
     11: [("https://m.thepaper.cn/newsDetail_forward_1686617", "澎湃新闻（马上评）", "news", "2", None)],
     13: [("https://news.qq.com/rain/a/20260430A04O7D00", "腾讯新闻", "news", "2", "2026-04-30")],
     14: [("https://www.chinanews.com.cn/m/sh/2015/05-04/7250467.shtml", "中新网", "news", "2", "2015-05-04")],
@@ -224,7 +234,10 @@ SOURCES = {
     ],
     18: [("https://www.vice.com/en/article/animal-abuse-china-cat-abuse-suzhou/", "Vice", "news", "2", None)],
     19: [("https://m.thepaper.cn/newsDetail_forward_4036022", "澎湃新闻（转央视）", "news", "2", None)],
-    20: [],  # weakest-sourced candidate; no primary link located this round -- see inclusion_note
+    20: [
+        ("https://m.thepaper.cn/newsDetail_forward_3278123", "澎湃新闻", "news", "2", "2019-04-07"),
+        ("https://www.dutenews.com/n/article/181543", "都市时报", "news", "2", None),
+    ],
 }
 
 
@@ -239,7 +252,9 @@ def seed(db_path: Path) -> None:
 
     seq = 0
     source_seq = 0
-    needs_verification_seeds = {2, 4, 5, 7, 8, 10, 11, 14, 18, 19, 20}
+    # 2026-07-27 follow-up search resolved 5, 7, 8, 10, 20 (primary sources found);
+    # these six remain unresolved.
+    needs_verification_seeds = {2, 4, 11, 14, 18, 19}
 
     for row in INCIDENTS:
         seq += 1
