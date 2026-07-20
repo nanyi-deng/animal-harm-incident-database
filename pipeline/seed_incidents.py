@@ -256,6 +256,42 @@ INCIDENTS = [
          inclusion_note="收录；乐山-重庆高速沿线62具宠物尸体，记者实地发现，无法归因到单一施害人，"
                          "跨川渝两地故 city 留空、location_precision 标 province；是否适配 Incident "
                          "单一事件模型存疑，与 HRL-014 性质相同"),
+    # --- Round 3 expansion (2026-07-27, HRL-017), clearing the 30-incident floor ---
+    dict(seed_no=31, province="北京市", city="北京市", location_precision="district",
+         date_start="2022-09-14", date_precision="day", date_status="officially_reported",
+         animal_category="multiple", estimated_animal_count="11", juvenile_animal="unknown",
+         mortality_status="dead", harm_categories="poisoning",
+         minor_involvement="no", institutional_involvement="no",
+         commercial_involvement="no", group_involvement="no",
+         content_creation_involvement="no", is_test_case=0,
+         inclusion_note="收录；\"9·14\"北京宠物中毒案，张某华，目前池中法律后果最重的候选"
+                         "（投放危险物质罪，一审4年，二审维持）"),
+    dict(seed_no=32, province="山西省", city="晋中市", location_precision="city",
+         date_start="2024-05-20", date_precision="day", date_status="officially_reported",
+         animal_category="cat", estimated_animal_count="1", juvenile_animal="unknown",
+         mortality_status="dead", harm_categories="beating|suffocation",
+         minor_involvement="no", institutional_involvement="unknown",
+         commercial_involvement="no", group_involvement="no",
+         content_creation_involvement="no", is_test_case=0,
+         inclusion_note="收录；晋中学院校猫\"刘海\"事件，校方回应从批评教育升级为报警立案，"
+                         "与重庆案类似的回应升级模式"),
+    dict(seed_no=33, province="广西壮族自治区", city="南宁市", location_precision="city",
+         date_start="2023-08-28", date_precision="day", date_status="officially_reported",
+         animal_category="cat", estimated_animal_count="16", juvenile_animal="unknown",
+         mortality_status="dead", harm_categories="beating|dismemberment|content_motivated_abuse",
+         minor_involvement="no", institutional_involvement="no",
+         commercial_involvement="yes", group_involvement="yes",
+         content_creation_involvement="yes", is_test_case=0,
+         inclusion_note="收录；南宁工行\"猫瘾治疗师\"王某某案，银行作为雇主的机构回应"),
+    dict(seed_no=34, province="浙江省", city="杭州市", location_precision="city",
+         date_start="2020", date_precision="year", date_status="officially_reported",
+         animal_category="multiple", estimated_animal_count="约300", juvenile_animal="unknown",
+         mortality_status="dead", harm_categories="beating|dismemberment|content_motivated_abuse",
+         minor_involvement="no", institutional_involvement="unknown",
+         commercial_involvement="unknown", group_involvement="unknown",
+         content_creation_involvement="yes", is_test_case=0,
+         inclusion_note="收录；浙江警察学院教师王照蔚案，教职工作案类型（此前仅有学生/雇员案例）；"
+                         "官方通报本身用实名\"王照蔚\"，按 HRL-015 沿用实名"),
 ]
 
 # One or more (original_url, source_name, source_type, source_tier, publication_date)
@@ -348,6 +384,18 @@ SOURCES = {
     28: [
         ("https://news.ycwb.com/ikimvkitil/content_53982739.htm", "羊城晚报", "news", "2", None),
         ("https://m.163.com/dy/article/KMRRK76E05149PH8.html", "网易", "news", "3", None),
+    ],
+    31: [
+        ("https://www.sohu.com/a/1010613071_161795", "搜狐", "news", "3", "2025-12-11"),
+        ("https://www.jiemian.com/article/13748540.html", "界面新闻", "news", "2", "2025-12-11"),
+        ("https://baike.baidu.com/item/9%C2%B714%E5%8C%97%E4%BA%AC%E5%AE%A0%E7%89%A9%E4%B8%AD%E6%AF%92%E6%A1%88/65242193",
+         "百度百科", "other", "2", None),
+    ],
+    32: [("https://news.qq.com/rain/a/20240522A07W5Q00", "腾讯新闻", "news", "2", "2024-05-22")],
+    33: [("https://news.qq.com/rain/a/20230903A06QJN00", "腾讯新闻", "news", "2", "2023-09-03")],
+    34: [
+        ("https://www.thepaper.cn/newsDetail_forward_10709036", "澎湃新闻", "news", "2", "2021-01-08"),
+        ("https://www.163.com/news/article/FVRKUM020001899O.html", "网易", "news", "3", None),
     ],
 }
 

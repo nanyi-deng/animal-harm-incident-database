@@ -96,6 +96,9 @@ INCIDENT_CORRECTIONS = {
         # Downgrading date_status accordingly rather than keeping unwarranted confidence.
         "date_status": "claimed_only",
     },
+    # --- Round 3 (2026-07-27): no incident-field corrections needed this round --
+    # the only nuance (Nanning bank case, #33/AHID-CN-2026-0030) is handled entirely
+    # at the claims level below (confidence tagging), not an incidents_public fix.
 }
 
 # --- Response flags on incidents_public, set only where the archived text
@@ -122,11 +125,17 @@ RESPONSE_FLAGS = {
     "AHID-CN-2026-0015": dict(official_response_found=1, police_response_found=1),
     "AHID-CN-2026-0016": dict(official_response_found=0, police_response_found=1),  # traffic police attended
     # the crash scene procedurally; no regulatory finding on the transport company documented yet
-    "AHID-CN-2026-0017": dict(official_response_found=1, police_response_found=1),
+    "AHID-CN-2026-0017": dict(official_response_found=1, police_response_found=1, ngo_response_found=1),
+    # ^ retroactive fix (round 3 audit): Companion Animals Working Group (Beijing-based
+    # nonprofit) directly tipped off authorities and pushed for investigation -- the claim
+    # already recorded this content, the flag just hadn't been set to match it
     "AHID-CN-2026-0018": dict(official_response_found=0),  # investigative piece; no enforcement case exists
     "AHID-CN-2026-0019": dict(official_response_found=1, police_response_found=1, legal_outcome_found=1),
     # --- Round 2 (2026-07-27) ---
-    "AHID-CN-2026-0020": dict(official_response_found=1, police_response_found=1, legal_outcome_found=0),
+    "AHID-CN-2026-0020": dict(official_response_found=1, police_response_found=1, legal_outcome_found=0,
+                               rescue_response_found=1),
+    # ^ retroactive fix (round 3 audit): 3 surviving dogs sent to a pet hospital and
+    # animal shelter -- already in the claims text, the flag just hadn't been set
     # ^ Chongqing: case formally opened + administrative detention, but no court outcome yet
     "AHID-CN-2026-0021": dict(official_response_found=1, police_response_found=1, school_response_found=0),
     "AHID-CN-2026-0022": dict(official_response_found=1, police_response_found=1),
@@ -138,6 +147,11 @@ RESPONSE_FLAGS = {
     # ^ 法院判决 + 涉事机构主动辟谣（policy_response 借用来记录"机构辟谣行动"，非严格意义的政策回应，
     # 但现有 enum 里没有更贴切的选项，claims 里会写清楚具体是什么）
     "AHID-CN-2026-0027": dict(official_response_found=0),  # 记者实地发现报道，未见对应监管部门回应
+    # --- Round 3 (2026-07-27) ---
+    "AHID-CN-2026-0028": dict(official_response_found=1, police_response_found=1, legal_outcome_found=1),
+    "AHID-CN-2026-0029": dict(official_response_found=1, school_response_found=1),
+    "AHID-CN-2026-0030": dict(official_response_found=1),  # 银行作为雇主的机构回应，非监管部门
+    "AHID-CN-2026-0031": dict(official_response_found=1),  # 学校自身机构回应
 }
 
 # --- Claims. Each tuple: (claim_type, claim_value, support_status,
@@ -303,6 +317,10 @@ CLAIMS = {
                         "手段，但未明确归因于本人", "supported", 1, 1, 0, "high"),
         ("official_response", "苏州市吴中区警方发布官方通报，同时对李某（涉嫌虐杀领养猫只并传播视频）与介入"
                               "的志愿者（涉嫌拘禁殴打李某）两方展开调查", "supported", 1, 1, 0, "high"),
+        ("policy_response", "总部位于北京的动物福利组织\"伴侣动物工作组\"（Companion Animals Working Group）"
+                            "获悉线索后主动向警方举报，并公开呼吁腾讯公司整治QQ群内虐待动物内容传播",
+         "supported", 1, 1, 0, "high"),
+        # ^ round 3 audit：此前遗漏对应的 ngo_response_found=1，已在 RESPONSE_FLAGS 补上
     ],
     "AHID-CN-2026-0018": [  # 如皋/济宁地下宠物繁殖场（原线索误记昆山）-- 见HRL-014
         ("event_occurred", "央视财经《经济半小时》调查报道江苏如皋、山东济宁等地存在无证地下宠物交易与繁殖场，"
@@ -337,6 +355,9 @@ CLAIMS = {
         # ^ 故意在同一条 claim 里呈现官方回应从消极到积极的转变过程，不美化也不隐藏早期不作为
         ("policy_response", "事件引发数百市民及志愿者连续多日聚集抗议，要求订立专门反虐待动物法；"
                             "警方对集会现场进行清场并对网上流传的集会影像进行审查", "partially_supported", 1, 1, 0, "medium"),
+        ("rescue_outcome", "3只幸存犬只（含被救出的2只黑色幼犬）经动物志愿者及警方协助送往爱心宠物医院及"
+                           "动物收容所救治寄养；另有多只动物下落不明，去向未知", "supported", 2, 2, 0, "high"),
+        # ^ round 3 audit：此前遗漏对应的 rescue_response_found=1，已在 RESPONSE_FLAGS 补上
     ],
     "AHID-CN-2026-0021": [  # 徐州3名男孩虐猫
         ("event_occurred", "徐州四季连城锦宸小区3名男孩持棍棒及锤子将一只白猫按压致死", "supported", 1, 1, 0, "high"),
@@ -413,6 +434,54 @@ CLAIMS = {
          "claimed_only", 1, 1, 0, "medium"),
         ("official_response", "报道中未见交通或农业农村部门就本次乐山-重庆事件发布对应调查或处理通报",
          "unknown", 1, 1, 0, "low"),
+    ],
+    # --- Round 3 (2026-07-27, HRL-017) ---
+    "AHID-CN-2026-0028": [  # 北京"9·14"宠物中毒案，张某华 -- 两来源在动物构成上矛盾
+        ("event_occurred", "北京朝阳区首开畅颐园小区业主张某华（65岁）因不满犬只对其电动三轮车撒尿、划损车辆，"
+                          "将氟乙酸钠浸泡鸡脖后弃于小区公共区域，致多只宠物中毒", "supported", 2, 2, 0, "high"),
+        ("event_date", "2022-09-14", "supported", 2, 2, 0, "high"),
+        ("animal_count", "搜狐一方陈述：9只宠物犬及2只流浪猫死亡（共11只死亡）", "partially_supported", 1, 1, 1, "medium"),
+        ("animal_count", "界面新闻一方陈述：共11只宠物犬中毒，其中9只死亡（未提及猫，暗示2只犬存活而非2只猫死亡）",
+         "contradicted", 1, 1, 1, "medium"),
+        # ^ 两条来源对"11"这个总数一致，但对"死亡动物是否含猫、抑或全为犬且部分存活"陈述不一致，均予保留
+        ("legal_outcome", "朝阳警方以投放危险物质罪立案侦查，检方提起公诉；北京朝阳法院一审（2025-12-11）"
+                          "判处张某华有期徒刑4年，并判赔11名民事原告数千至数万元不等；北京市第三中级人民法院"
+                          "二审（2026-04-16）维持原判，驳回5名上诉人的精神损失赔偿诉求",
+         "supported", 2, 2, 0, "high"),
+        ("legal_outcome", "案件历经9次延审，法律界人士分析系\"投放危险物质罪\"属危害公共安全重罪，法院对"
+                          "行为是否达到\"足以严重危害不特定多数人人身或重大财产安全\"的法定程度持审慎态度",
+         "supported", 1, 1, 0, "high"),
+    ],
+    "AHID-CN-2026-0029": [  # 山西晋中学院"刘海"事件
+        ("event_occurred", "山西晋中学院校园流浪猫（学生称\"刘海\"）于夜间被人掐死，校内动物保护学生账号发布讣告",
+         "supported", 1, 1, 0, "high"),
+        ("event_date", "2024-05-20晚8时", "supported", 1, 1, 0, "high"),
+        ("harm_method", "被人徒手掐死", "supported", 1, 1, 0, "high"),
+        ("official_response", "2024-05-22校方电话回应称已对涉事学生批评教育及心理疏导，具体处罚将按校规校纪"
+                              "处理", "supported", 1, 1, 0, "high"),
+        ("official_response", "搜索摘要提及校方于5月23日进一步回应称学生已报警、警方介入调查取证；此细节未见"
+                              "于本次归档到的唯一来源正文，暂不采信为已证实", "claimed_only", 0, 0, 0, "low"),
+        # ^ 诚实标注：这条"回应升级"是本轮种子表里写的说法，但归档到的正文没有确认，降级处理
+    ],
+    "AHID-CN-2026-0030": [  # 南宁工行"猫瘾治疗师"王某某案
+        ("event_occurred", "中国工商银行南宁市新城支行员工王某某被网友举报存在虐猫行为，银行核查后确认属实",
+         "supported", 1, 1, 0, "high"),
+        ("event_date", "2023-09-03（银行通报日期）", "supported", 1, 1, 0, "high"),
+        ("harm_method", "网传细节：网名\"猫瘾治疗师\"，一晚虐杀16只小猫并在网上传播贩卖虐猫视频，还曾发布"
+                        "\"直播虐猫预告\"要挟他人捐款；这些具体细节未见于银行官方通报本身（通报仅确认"
+                        "\"存在虐猫行为\"），暂标记为待验证", "claimed_only", 0, 0, 0, "low"),
+        ("official_response", "中国工商银行南宁新城支行核查后与该员工解除劳动合同", "supported", 1, 1, 0, "high"),
+    ],
+    "AHID-CN-2026-0031": [  # 浙江警察学院教师王照蔚案 -- 官方通报本身用实名，按HRL-015沿用
+        ("event_occurred", "浙江警察学院教师王照蔚被举报虐待动物，以网名\"兴汉龙腾\"在QQ群聊分享虐杀视频",
+         "supported", 2, 2, 0, "high"),
+        ("event_date", "2020下半年（网络举报期间，具体虐待时间不详）/ 2020-12-06（校方称已开展调查）/ "
+                       "2021-01-08（处分决定）", "supported", 2, 2, 0, "high"),
+        ("animal_count", "网络爆料称半年内虐杀约300只猫狗；此数字为举报方单方陈述，未见于校方官方通报本身"
+                         "（通报仅认定行为\"违背公序良俗，造成不良社会影响\"，未确认具体数量）",
+         "claimed_only", 0, 0, 0, "low"),
+        ("official_response", "浙江警察学院通报认定王照蔚行为违背公序良俗，给予政务记大过处分并调离教师岗位",
+         "supported", 2, 2, 0, "high"),
     ],
 }
 
