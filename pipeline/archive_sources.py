@@ -18,12 +18,14 @@ Run: python3 pipeline/archive_sources.py [--db pipeline/ahid_pilot.sqlite3]
 from __future__ import annotations
 
 import argparse
+import gzip
 import hashlib
 import re
 import sqlite3
 import time
 import urllib.error
 import urllib.request
+import zlib
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -45,11 +47,26 @@ def extract_title(raw: bytes) -> str | None:
     return re.sub(r"\s+", " ", text).strip()[:300]
 
 
+def _decompress(body: bytes, content_encoding: str) -> bytes:
+    encoding = (content_encoding or "").lower()
+    if "gzip" in encoding:
+        return gzip.decompress(body)
+    if "deflate" in encoding:
+        return zlib.decompress(body)
+    return body
+
+
 def fetch(url: str) -> tuple[int | None, bytes | None, str | None]:
+    # No Accept-Encoding sent -> servers are supposed to default to identity
+    # (uncompressed) per HTTP spec, but at least one in this pilot's source
+    # list (m.gmw.cn) sends gzip regardless. Decompress explicitly based on
+    # the actual Content-Encoding response header rather than trust that.
     req = urllib.request.Request(url, headers={"User-Agent": USER_AGENT})
     try:
         with urllib.request.urlopen(req, timeout=REQUEST_TIMEOUT_SECONDS) as resp:
-            return resp.status, resp.read(), None
+            raw = resp.read()
+            body = _decompress(raw, resp.headers.get("Content-Encoding", ""))
+            return resp.status, body, None
     except urllib.error.HTTPError as e:
         return e.code, None, str(e)
     except Exception as e:  # noqa: BLE001 -- network fetch, want to log and move on
