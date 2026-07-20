@@ -85,6 +85,21 @@ CREATE TABLE IF NOT EXISTS archive_log (
     error_message TEXT
 );
 
+-- Internal only. Stage 2 (dependency analysis) writes here to make its
+-- pairwise decisions auditable -- every dependent/unknown call should be
+-- traceable to a specific signal, not just a bare label on sources_public.
+CREATE TABLE IF NOT EXISTS dependency_log (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    incident_id TEXT NOT NULL,
+    source_id_a TEXT NOT NULL,
+    source_id_b TEXT NOT NULL,
+    text_similarity_ratio REAL,
+    citation_signal TEXT,
+    decision TEXT CHECK (decision IN ('dependent','unknown')),
+    method_version TEXT,
+    analyzed_at TEXT
+);
+
 CREATE TABLE IF NOT EXISTS claims_public (
     claim_id TEXT PRIMARY KEY,
     incident_id TEXT NOT NULL REFERENCES incidents_public(incident_id),
