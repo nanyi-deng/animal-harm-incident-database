@@ -17,9 +17,13 @@
    - **GitHub Issue 表单（备用，面向懂技术的协作者）**：`.github/ISSUE_TEMPLATE/incident_submission.yml`，字段相同。
 
    两个渠道都有"确认未写出未成年人身份信息"的强制确认项；网页渠道并明确提示提交内容将公开、请勿留个人联系方式。
-2. **agent 预筛**（`pipeline/screen_submissions.py`）：拉取所有带 `incident-submission` 标签的开放 issue，对每条提交做**纯机械性检查**——链接是否可以打开、页面是否疑似失效/反爬拦截页、URL 是否与已收录来源完全重复。**不判断内容是否属实、是否达到收录标准**——这两件事都是人来做的。结果追加写入 `docs/pipeline/submitted_candidates_pending_review.md`，格式跟现有 `candidate_incidents_seed.md` 一致，方便直接比对审核。
+2. **agent 预筛**（`pipeline/screen_submissions.py`），两种触发方式：
+   - **自动（主路径）**：GitHub Actions（`.github/workflows/prescreen_submission.yml`）在带 `incident-submission` 标签的 issue 创建时自动运行，对该条提交做**纯机械性检查**——链接是否可以打开、页面是否疑似失效/反爬拦截页、URL 是否与已收录来源完全重复——并把结果自动评论在 issue 下。审核者收到 GitHub 通知时预筛已完成。
+   - **手动（批量/兜底）**：本地跑 `python3 pipeline/screen_submissions.py`，把所有开放提交的预筛结果追加写入 `docs/pipeline/submitted_candidates_pending_review.md`，格式跟现有 `candidate_incidents_seed.md` 一致，方便直接比对审核。
+
+   无论哪种方式，预筛**不判断内容是否属实、是否达到收录标准**——这两件事都是人来做的。自动评论的措辞明确告知提交者"不构成收录判断"。
 3. **人工审核**：PI（或未来的项目协作者，视分工另行确定）按 `release/ahid-cn-dataset-v0.1/documentation/inclusion_exclusion_criteria.md` 的标准逐条判断，结论写回 `submitted_candidates_pending_review.md`，通过的移入 `candidate_incidents_seed.md` 并进入正常的 Stage 0-5 流水线；不通过的在 GitHub issue 下回复理由并关闭。
-4. **提交者不会自动收到"已收录"通知**——现阶段没有自动回复机制（没有配置 GitHub token），审核结论目前需要人工回到 issue 下评论。这个手动步骤未来可以脚本化，但现在没做，避免为了自动化而自动化。
+4. **提交者会自动收到预筛结果**（Actions 评论），但**审核结论仍需人工回复**——收录/不收录的决定和理由由审核者本人在 issue 下评论并关闭 issue，这一步不自动化（它就是人工判断本身）。
 
 ## 关于协作者
 

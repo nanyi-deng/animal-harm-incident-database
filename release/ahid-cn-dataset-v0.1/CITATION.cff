@@ -10,6 +10,4 @@ authors:
     given-names: "Nanyi"
     orcid: "https://orcid.org/0009-0009-2017-049X"
 repository-code: "https://github.com/nanyi-deng/animal-harm-incident-database"
-# doi: added once the Zenodo draft's reserved DOI is confirmed -- paste it
-# here (10.5281/zenodo.XXXXXXX) before uploading this file, or re-upload
-# an updated copy in a corrected version.
+doi: "10.5281/zenodo.21462312"

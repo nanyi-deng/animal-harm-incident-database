@@ -1,0 +1,56 @@
+# Auto pre-screen for public incident submissions (HRL-021/022).
+#
+# When an issue with the incident-submission label is opened (web form and
+# GitHub template both apply it at creation), run the mechanical pre-screen
+# -- URL reachability, dead/anti-bot page detection, duplicate check against
+# already-seeded sources -- and post the result as a comment on the issue.
+#
+# Scope boundary, same as everywhere else in this project: this workflow
+# never decides inclusion and writes nothing but an issue comment. Human
+# review per docs/submission_process.md remains the only path into the
+# dataset.
+
+name: Pre-screen incident submission
+
+on:
+  issues:
+    types: [opened]
+
+permissions:
+  issues: write
+  contents: read
+
+jobs:
+  prescreen:
+    if: contains(github.event.issue.labels.*.name, 'incident-submission')
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      # stdlib-only script -- no pip install step on purpose.
+      - name: Run pre-screen for this issue
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          python3 pipeline/screen_submissions.py \
+            --repo "${{ github.repository }}" \
+            --issue "${{ github.event.issue.number }}" > /tmp/prescreen_comment.md
+          echo "--- comment to be posted ---"
+          cat /tmp/prescreen_comment.md
+
+      - name: Post result as issue comment
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if [ -s /tmp/prescreen_comment.md ]; then
+            gh issue comment "${{ github.event.issue.number }}" \
+              --repo "${{ github.repository }}" \
+              --body-file /tmp/prescreen_comment.md
+          else
+            echo "No comment generated (issue lacked the label?); skipping."
+          fi

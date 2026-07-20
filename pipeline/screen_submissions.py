@@ -29,7 +29,9 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import re
+import sys
 import urllib.request
 from datetime import datetime, timezone
 from pathlib import Path
@@ -78,13 +80,31 @@ def _parse_issue_form_body(body: str) -> dict:
     return fields
 
 
+def _github_headers() -> dict:
+    # GH_TOKEN is optional locally; in the Actions workflow it's the built-in
+    # token, which avoids the harsh unauthenticated rate limit on the shared
+    # runner IPs (60 req/hr/IP would break the moment two issues arrive).
+    headers = {"Accept": "application/vnd.github+json"}
+    token = os.environ.get("GH_TOKEN") or os.environ.get("GITHUB_TOKEN")
+    if token:
+        headers["Authorization"] = f"Bearer {token}"
+    return headers
+
+
 def _fetch_open_submissions(repo: str) -> list:
     url = f"{GITHUB_API}/repos/{repo}/issues?labels={SUBMISSION_LABEL}&state=open&per_page=100"
-    req = urllib.request.Request(url, headers={"Accept": "application/vnd.github+json"})
+    req = urllib.request.Request(url, headers=_github_headers())
     with urllib.request.urlopen(req, timeout=30) as resp:
         issues = json.loads(resp.read())
     # Issues API also returns PRs with issue-shaped payloads; exclude those.
     return [i for i in issues if "pull_request" not in i]
+
+
+def _fetch_single_issue(repo: str, number: int) -> dict:
+    url = f"{GITHUB_API}/repos/{repo}/issues/{number}"
+    req = urllib.request.Request(url, headers=_github_headers())
+    with urllib.request.urlopen(req, timeout=30) as resp:
+        return json.loads(resp.read())
 
 
 def _check_url(url: str, existing: set) -> str:
@@ -101,6 +121,58 @@ def _check_url(url: str, existing: set) -> str:
     return f"可访问（HTTP {status}，标题：{title!r}）"
 
 
+def _screen_issue(issue: dict, existing: set) -> dict:
+    fields = _parse_issue_form_body(issue.get("body") or "")
+    urls = []
+    if fields.get("source_url"):
+        urls.append(fields["source_url"].strip())
+    if fields.get("additional_urls"):
+        urls.extend(u.strip() for u in fields["additional_urls"].split(",") if u.strip())
+
+    checks = [(u, _check_url(u, existing)) for u in urls]
+
+    return {
+        "issue_number": issue["number"],
+        "issue_url": issue["html_url"],
+        "submitted_by": issue["user"]["login"],
+        "title": issue["title"],
+        "summary": fields.get("summary", "（未填写）"),
+        "animal_category": fields.get("animal_category", "（未填写）"),
+        "url_checks": checks,
+    }
+
+
+def format_comment(entry: dict) -> str:
+    """Markdown comment posted back onto the issue by the Actions workflow."""
+    lines = [
+        "**自动预筛结果**（机械性检查，不构成收录判断——是否收录由人工按公开标准审核）",
+        "",
+    ]
+    if entry["url_checks"]:
+        for u, result in entry["url_checks"]:
+            lines.append(f"- `{u}` — {result}")
+    else:
+        lines.append("- ⚠️ 未能从提交内容中解析出任何链接——请检查提交格式，或以评论补充来源 URL")
+    lines += [
+        "",
+        "感谢提交。线索已进入人工审核队列，审核结论会回复在本 issue 下。",
+    ]
+    return "\n".join(lines)
+
+
+def screen_single(repo: str, issue_number: int) -> None:
+    """Screen one issue and print the result comment to stdout (Actions mode)."""
+    existing = _existing_urls()
+    issue = _fetch_single_issue(repo, issue_number)
+    labels = {l["name"] for l in issue.get("labels", [])}
+    if SUBMISSION_LABEL not in labels:
+        print(f"Issue #{issue_number} lacks the {SUBMISSION_LABEL} label; nothing to do.",
+              file=sys.stderr)
+        return
+    entry = _screen_issue(issue, existing)
+    print(format_comment(entry))
+
+
 def screen(repo: str, out_path: Path) -> None:
     existing = _existing_urls()
     issues = _fetch_open_submissions(repo)
@@ -109,26 +181,7 @@ def screen(repo: str, out_path: Path) -> None:
         print("No open incident-submission issues found.")
         return
 
-    entries = []
-    for issue in issues:
-        fields = _parse_issue_form_body(issue.get("body") or "")
-        urls = []
-        if fields.get("source_url"):
-            urls.append(fields["source_url"].strip())
-        if fields.get("additional_urls"):
-            urls.extend(u.strip() for u in fields["additional_urls"].split(",") if u.strip())
-
-        checks = [(u, _check_url(u, existing)) for u in urls]
-
-        entries.append({
-            "issue_number": issue["number"],
-            "issue_url": issue["html_url"],
-            "submitted_by": issue["user"]["login"],
-            "title": issue["title"],
-            "summary": fields.get("summary", "（未填写）"),
-            "animal_category": fields.get("animal_category", "（未填写）"),
-            "url_checks": checks,
-        })
+    entries = [_screen_issue(issue, existing) for issue in issues]
 
     out_path.parent.mkdir(parents=True, exist_ok=True)
     with out_path.open("a", encoding="utf-8") as f:
@@ -159,5 +212,14 @@ if __name__ == "__main__":
         "--out", type=Path,
         default=Path(__file__).parent.parent / "docs" / "pipeline" / "submitted_candidates_pending_review.md",
     )
+    parser.add_argument(
+        "--issue", type=int, default=None,
+        help="Screen a single issue and print the result comment to stdout "
+             "(used by the prescreen GitHub Actions workflow) instead of "
+             "appending all open submissions to the staging file",
+    )
     args = parser.parse_args()
-    screen(args.repo, args.out)
+    if args.issue is not None:
+        screen_single(args.repo, args.issue)
+    else:
+        screen(args.repo, args.out)

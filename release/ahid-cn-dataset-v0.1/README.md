@@ -54,6 +54,7 @@ incidence-rate estimate.
 
 ## Citation
 
-See `CITATION.cff`. Cite the specific version (v0.1) and check the Zenodo
-record for any later corrected versions before use — published versions are
-immutable; corrections appear as new versions with changelog notes.
+See `CITATION.cff`. DOI for this version: `10.5281/zenodo.21462312`.
+Cite the specific version (v0.1) and check the Zenodo record for any later
+corrected versions before use — published versions are immutable;
+corrections appear as new versions with changelog notes.
