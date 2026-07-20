@@ -1,0 +1,57 @@
+---
+import Layout from '../layouts/Layout.astro';
+
+const APPEALS_EMAIL = null; // TODO(HRL-019): confirm contact email/method before public launch
+---
+<Layout title="申诉与更正" description="AHID 的申诉与更正处理流程、可申请事项与处理时限。">
+  <div class="wrap">
+    <h1 style="margin: 40px 0 16px;">申诉与更正</h1>
+
+    <div class="disclaimer">
+      本网站使用自动化工具处理绝大多数流程，但申诉与更正现阶段由创始人本人处理，不是自动化流水线。
+      我们承诺按下方时限处理，但初期人力有限，实际处理速度可能受申诉量影响。
+    </div>
+
+    <section>
+      <h2>可以申请什么</h2>
+      <ul>
+        <li>信息错误（日期、地点、动物类型、伤害方式等字段有误）</li>
+        <li>身份泄露（未成年人或普通个人身份信息被错误公开）</li>
+        <li>事件重复（应合并为同一事件却被拆分记录）</li>
+        <li>反证未显示（存在但未被系统记录的矛盾证据）</li>
+        <li>官方回应未收录</li>
+        <li>媒体版权问题</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>处理时限</h2>
+      <table class="claims-table">
+        <thead><tr><th>类型</th><th>首次响应</th><th>处理承诺</th></tr></thead>
+        <tbody>
+          <tr>
+            <td>高风险（未成年人身份、住址、法律威胁）</td>
+            <td>页面立即进入临时限制状态</td>
+            <td>14 天内完成处理</td>
+          </tr>
+          <tr>
+            <td>一般（信息错误、事件重复、反证未显示等）</td>
+            <td>记录在案</td>
+            <td>30 天内完成处理</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section>
+      <h2>如何提交</h2>
+      {APPEALS_EMAIL ? (
+        <p>请发送邮件至 <a href={`mailto:${APPEALS_EMAIL}`}>{APPEALS_EMAIL}</a>，并尽量包含：涉及的事件编号（incident_id）、问题类型、具体描述、可支持申诉的补充来源（如有）。</p>
+      ) : (
+        <p style="color: var(--text-muted);">联系方式尚未最终确认（本页面为预览构建，未公开部署）。</p>
+      )}
+    </section>
+
+    <p style="margin-top: 32px;"><a href="/methodology/">查看完整方法与治理说明 →</a></p>
+  </div>
+</Layout>
