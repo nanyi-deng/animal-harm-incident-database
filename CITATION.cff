@@ -4,6 +4,7 @@ title: "AHID: Animal Harm Incident Database"
 type: software
 version: "0.0.1-dev"
 date-released: "2026-07-20"
+license: MIT
 authors:
   - family-names: "Deng"
     given-names: "Nanyi"

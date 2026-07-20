@@ -1,18 +1,44 @@
-LICENSE_DATA.txt — placeholder, not a binding license
+AHID-CN Dataset — Data License
 
-The license for this dataset's structured data (data/*.csv) has not yet
-been finalized. See docs/human_review_log.md, HRL-005, in the main
-repository for the decision this is pending.
+Copyright (C) 2026 Nanyi Deng and AHID contributors.
 
-Current proposal under review (not yet confirmed):
-  - Structured data (incidents_public, sources_public, claims_public,
-    responses_public): CC BY 4.0
-  - Pipeline code: MIT (already applied at the repository level)
-  - Third-party source content (article text, media): remains with its
-    original rights holders; this dataset does not redistribute it —
-    only metadata, extracted claims, and archival status about it.
+The structured data in this package (data/incidents_public.csv,
+data/sources_public.csv, data/claims_public.csv, data/responses_public.csv)
+is licensed under the Creative Commons Attribution-ShareAlike 4.0
+International License (CC BY-SA 4.0):
 
-Do not treat this file as a released license. It exists so this package's
-directory structure is complete for review; the actual LICENSE_DATA.txt
-that ships with a real release will replace this file once HRL-005 is
-decided.
+    https://creativecommons.org/licenses/by-sa/4.0/
+
+You are free to share and adapt this data for any purpose, including
+commercially, provided you give appropriate credit and license any
+adaptation you distribute under the same CC BY-SA 4.0 terms.
+
+This choice deliberately mirrors the AI Incident Database's licensing
+of its core structured collections (Creative Commons Attribution-
+ShareAlike 4.0), for the same reason: attribution is preserved
+regardless of downstream use, and ShareAlike prevents anyone from
+repackaging this open dataset into a closed, proprietary derivative --
+without adding a NonCommercial restriction, which would create
+ambiguity that discourages exactly the legitimate academic, nonprofit,
+and journalistic reuse this project exists to enable.
+
+Pipeline code in this repository (everything under pipeline/, site/,
+and elsewhere outside data/ and this package's data/ subdirectory) is
+licensed separately under the MIT License. See the repository root
+LICENSE file for the code license text.
+
+Explicitly NOT covered by this license -- rights remain with the
+original publishers/authors:
+  - The full text of third-party source articles (not distributed in
+    this dataset; sources_public.csv contains only metadata about
+    where each source can be found, not its content)
+  - Any media (images, video) referenced by a source, none of which
+    is distributed in this dataset
+
+Suggested attribution:
+
+    Deng, Nanyi (2026). AHID-CN Dataset v0.1 [Data set]. Animal Harm
+    Incident Database. https://github.com/nanyi-deng/animal-harm-incident-database
+
+(A DOI-bearing citation will replace this once the dataset is actually
+released via Zenodo; see CITATION.cff and human_review_log.md HRL-009.)

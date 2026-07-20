@@ -4,6 +4,7 @@ title: "AHID-CN Dataset v0.1 (staging, unreleased)"
 type: dataset
 version: "0.1.0-staging"
 # date-released intentionally omitted -- not released yet
+license: CC-BY-SA-4.0
 authors:
   - family-names: "Deng"
     given-names: "Nanyi"

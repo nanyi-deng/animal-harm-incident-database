@@ -56,4 +56,4 @@ Dataset citation will be available with `ahid-cn-dataset-v0.1` (Zenodo DOI, expe
 
 ## License
 
-To be finalized before first public release (planned: CC BY 4.0 for original structured data, MIT for code; third-party source content remains with its rights holders). See `docs/human_review_log.md` HRL-005.
+Structured data: [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/) (deliberately mirrors the AI Incident Database's license for its core collections). Code: [MIT](LICENSE). Third-party source content referenced but not redistributed by this project remains with its original rights holders. Decided 2026-07-27, see `docs/human_review_log.md` HRL-005.
