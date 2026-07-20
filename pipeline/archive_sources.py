@@ -38,6 +38,15 @@ REQUEST_TIMEOUT_SECONDS = 20
 
 TITLE_RE = re.compile(rb"<title[^>]*>(.*?)</title>", re.IGNORECASE | re.DOTALL)
 
+# HTTP 200 does not mean "got the article" -- soft-404 pages and anti-bot JS
+# challenge pages both return 200 with real-looking byte counts. Caught by
+# manual inspection after a run that reported these as [ok]; a title
+# containing one of these markers, or a page with no title at all under
+# this byte threshold, is far more likely a block/error page than a short
+# real article.
+SOFT_404_TITLE_MARKERS = ("404", "页面不存在", "找不到页面", "page not found")
+NO_TITLE_SUSPECT_MAX_BYTES = 6000
+
 
 def extract_title(raw: bytes) -> str | None:
     match = TITLE_RE.search(raw)
@@ -97,7 +106,18 @@ def archive(db_path: Path, archive_dir: Path) -> None:
             title = extract_title(raw)
             snapshot_path = archive_dir / f"{source_id}.html"
             snapshot_path.write_bytes(raw)
-            availability = "available" if status and status < 400 else "unavailable"
+
+            soft_fail = None
+            if title and any(marker in title for marker in SOFT_404_TITLE_MARKERS):
+                soft_fail = f"soft-404 title: {title!r}"
+            elif not title and len(raw) < NO_TITLE_SUSPECT_MAX_BYTES:
+                soft_fail = f"no <title> and only {len(raw)}B -- likely anti-bot/challenge page, not an article"
+
+            # availability_status enum (data_dictionary.csv) has no generic "unavailable" --
+            # 'unknown' is the honest fit: for a soft-404 we can't tell if it moved, was
+            # deleted, or was mistyped in the source article; for an anti-bot block we
+            # simply never saw the real content, so we can't claim to know its state.
+            availability = "unknown" if (soft_fail or not status or status >= 400) else "available"
             conn.execute(
                 "UPDATE sources_public SET first_collected_at = ?, availability_status = ? "
                 "WHERE source_id = ?",
@@ -107,10 +127,14 @@ def archive(db_path: Path, archive_dir: Path) -> None:
                 "INSERT INTO archive_log (source_id, fetched_at, http_status, sha256_hex, "
                 "content_length, page_title, local_snapshot_path, error_message) "
                 "VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-                (source_id, now_ts, status, sha256_hex, len(raw), title, str(snapshot_path), error),
+                (source_id, now_ts, status, sha256_hex, len(raw), title, str(snapshot_path), soft_fail or error),
             )
-            ok += 1
-            print(f"[ok]     {source_id}  HTTP {status}  {len(raw)}B  {title!r}")
+            if soft_fail:
+                failed += 1
+                print(f"[FAILED] {source_id}  HTTP {status}  {len(raw)}B  -- {soft_fail}")
+            else:
+                ok += 1
+                print(f"[ok]     {source_id}  HTTP {status}  {len(raw)}B  {title!r}")
         else:
             conn.execute(
                 "UPDATE sources_public SET availability_status = 'unknown' WHERE source_id = ?",

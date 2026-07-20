@@ -184,6 +184,78 @@ INCIDENTS = [
          content_creation_involvement="no", is_test_case=0,
          inclusion_note="收录；原弱来源约束已解除（2026-07-27 二次搜索找到两条独立一手报道：澎湃新闻+都市时报，"
                          "含具体日期/地点/涉案人数/处理结果，来源等级升级为 Tier 2）"),
+    # --- Round 2 expansion (2026-07-27, HRL-016), toward the 30-50 v0.1 target ---
+    dict(seed_no=21, province="重庆市", city="重庆市", location_precision="district",
+         date_start="2026-03", date_precision="month", date_status="officially_reported",
+         animal_category="multiple", estimated_animal_count="3+", juvenile_animal="unknown",
+         mortality_status="dead", harm_categories="beating|dismemberment|other_harm",
+         minor_involvement="no", institutional_involvement="no",
+         commercial_involvement="no", group_involvement="yes",
+         content_creation_involvement="unknown", is_test_case=0,
+         inclusion_note="收录；\"山姆打包哥\"虐畜风波，重庆首例真正走到立案调查+行拘的候选，"
+                         "有独立维基百科条目及线下抗议角度"),
+    dict(seed_no=22, province="江苏省", city="徐州市", location_precision="city",
+         date_start="2026-07-13", date_precision="day", date_status="officially_reported",
+         animal_category="cat", estimated_animal_count="1", juvenile_animal="unknown",
+         mortality_status="dead", harm_categories="beating",
+         minor_involvement="yes", institutional_involvement="no",
+         commercial_involvement="no", group_involvement="yes",
+         content_creation_involvement="no", is_test_case=0,
+         inclusion_note="收录；未成年人案例，警方仅批评教育，未送专门学校——与旺旺案对比处理力度"),
+    dict(seed_no=23, province="江苏省", city="连云港市", location_precision="district",
+         date_start="2026-02-01", date_precision="day", date_status="officially_reported",
+         animal_category="dog", estimated_animal_count="1", juvenile_animal="no",
+         mortality_status="dead", harm_categories="burning",
+         minor_involvement="yes", institutional_involvement="no",
+         commercial_involvement="no", group_involvement="yes",
+         content_creation_involvement="no", is_test_case=0,
+         inclusion_note="收录；未成年人案例，警方调解各赔3000元了事——与旺旺案对比处理力度"),
+    dict(seed_no=24, province="四川省", city="成都市", location_precision="district",
+         date_start="2024-12-07", date_precision="day", date_status="officially_reported",
+         animal_category="cat", estimated_animal_count="1", juvenile_animal="unknown",
+         mortality_status="unknown", harm_categories="burning|beating",
+         minor_involvement="yes", institutional_involvement="unknown",
+         commercial_involvement="no", group_involvement="yes",
+         content_creation_involvement="yes", is_test_case=0,
+         inclusion_note="收录；未成年人案例，教育局通报停课反省+心理辅导——与旺旺案对比处理力度；"
+                         "动物是否死亡未见明确报道，mortality_status 保守标 unknown"),
+    dict(seed_no=25, province="河南省", city="郑州市", location_precision="city",
+         date_start="2025-05-21", date_precision="day", date_status="officially_reported",
+         animal_category="captive_wildlife", estimated_animal_count="1", juvenile_animal="unknown",
+         mortality_status="alive", harm_categories="beating",
+         minor_involvement="no", institutional_involvement="yes",
+         commercial_involvement="yes", group_involvement="no",
+         content_creation_involvement="no", is_test_case=0,
+         inclusion_note="收录；郑州锦艺城海洋馆海狮被踢事件，园方开除员工+停业整顿+对海狮做心理安抚"),
+    dict(seed_no=26, province="云南省", city="西双版纳傣族自治州", location_precision="city",
+         date_start="2026-01-23", date_precision="day", date_status="officially_reported",
+         animal_category="captive_wildlife", estimated_animal_count="1", juvenile_animal="yes",
+         mortality_status="alive", harm_categories="beating",
+         minor_involvement="no", institutional_involvement="yes",
+         commercial_involvement="yes", group_involvement="no",
+         content_creation_involvement="no", is_test_case=0,
+         inclusion_note="收录；西双版纳野生动物园饲养员殴打小象，此前已有多起长期虐待疑似投诉"),
+    dict(seed_no=27, province="四川省", city="都江堰市", location_precision="city",
+         date_start="2023-03", date_precision="month", date_status="contradicted",
+         animal_category="wildlife", estimated_animal_count=None, juvenile_animal="unknown",
+         mortality_status="alive", harm_categories=None,
+         minor_involvement="no", institutional_involvement="yes",
+         commercial_involvement="yes", group_involvement="yes",
+         content_creation_involvement="yes", is_test_case=0, misattribution_flag=1,
+         inclusion_note="收录为 AF 类型测试候选（首个）；核心事实是\"网络谣言被法院判决证实为虚假\"，"
+                         "不是一次真实的动物伤害——harm_categories 故意留空，不为凑字段编造伤害方式；"
+                         "PRD 原 AF 定义偏向旧视频/异地视频误传，本案是完全捏造的谣言，性质相近但不完全"
+                         "等同，methodology.md 需备注这一定义边界"),
+    dict(seed_no=28, province="四川省", city=None, location_precision="province",
+         date_start="2026-02-25", date_precision="day", date_status="metadata_supported",
+         animal_category="multiple", estimated_animal_count="62", juvenile_animal="unknown",
+         mortality_status="dead", harm_categories="abandonment",
+         minor_involvement="no", institutional_involvement="no",
+         commercial_involvement="unknown", group_involvement="unknown",
+         content_creation_involvement="no", is_test_case=0,
+         inclusion_note="收录；乐山-重庆高速沿线62具宠物尸体，记者实地发现，无法归因到单一施害人，"
+                         "跨川渝两地故 city 留空、location_precision 标 province；是否适配 Incident "
+                         "单一事件模型存疑，与 HRL-014 性质相同"),
 ]
 
 # One or more (original_url, source_name, source_type, source_tier, publication_date)
@@ -243,6 +315,40 @@ SOURCES = {
         ("https://m.thepaper.cn/newsDetail_forward_3278123", "澎湃新闻", "news", "2", "2019-04-07"),
         ("https://www.dutenews.com/n/article/181543", "都市时报", "news", "2", None),
     ],
+    21: [
+        ("https://zh.wikipedia.org/wiki/%E9%87%8D%E6%85%B6%E3%80%8C%E5%B1%B1%E5%A7%86%E6%89%93%E5%8C%85%E5%93%A5%E3%80%8D%E8%99%90%E7%95%9C%E4%BA%8B%E4%BB%B6%E5%8F%8A%E7%A4%BA%E5%A8%81",
+         "维基百科", "other", "2", None),
+        ("https://m.gmw.cn/2026-06/10/content_1304490199.htm", "光明网", "news", "2", "2026-06-10"),
+        ("https://finance.sina.com.cn/wm/2026-06-10/doc-iniawicy6101485.shtml", "新浪财经", "news", "2", "2026-06-10"),
+    ],
+    22: [
+        ("https://i.ifeng.com/c/8ukv2BygIRU", "凤凰网", "news", "2", None),
+        ("https://m.sohu.com/a/1050278916_120094090", "搜狐", "news", "3", None),
+    ],
+    23: [
+        ("https://m.163.com/dy/article/KKRV6PS40550B6IS.html", "网易", "news", "3", "2026-02-03"),
+        ("https://m.thepaper.cn/newsDetail_forward_32522926", "澎湃新闻", "news", "2", None),
+    ],
+    24: [
+        ("https://news.qq.com/rain/a/20241211A06O1500", "腾讯新闻", "news", "2", "2024-12-11"),
+        ("https://m.thepaper.cn/newsDetail_forward_29615413", "澎湃新闻", "news", "2", None),
+    ],
+    25: [
+        ("https://m.gmw.cn/2025-05/22/content_1304042318.htm", "光明网", "news", "2", "2025-05-22"),
+        ("https://www.sohu.com/a/897772608_162758", "搜狐", "news", "3", None),
+    ],
+    26: [
+        ("https://finance.sina.com.cn/wm/2026-01-24/doc-inhikrie2742845.shtml", "新浪财经", "news", "2", "2026-01-24"),
+        ("https://view.inews.qq.com/a/20260123A0854A00", "腾讯新闻", "news", "2", "2026-01-23"),
+    ],
+    27: [
+        ("https://www.scfzbs.com/tt/202602/83207478.html", "四川法治报", "news", "1", None),
+        ("https://finance.sina.com.cn/tech/digi/2026-07-01/doc-iniffyth6379540.shtml", "新浪科技", "news", "2", "2026-07-01"),
+    ],
+    28: [
+        ("https://news.ycwb.com/ikimvkitil/content_53982739.htm", "羊城晚报", "news", "2", None),
+        ("https://m.163.com/dy/article/KMRRK76E05149PH8.html", "网易", "news", "3", None),
+    ],
 }
 
 
@@ -272,8 +378,8 @@ def seed(db_path: Path) -> None:
                 estimated_animal_count, juvenile_animal, mortality_status,
                 harm_categories, minor_involvement, institutional_involvement,
                 commercial_involvement, group_involvement, content_creation_involvement,
-                is_test_case, inclusion_note
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                is_test_case, inclusion_note, misattribution_flag
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
             (
                 incident_id, row["seed_no"], row["province"], row["city"], row["location_precision"],
@@ -281,7 +387,7 @@ def seed(db_path: Path) -> None:
                 row["estimated_animal_count"], row["juvenile_animal"], row["mortality_status"],
                 row["harm_categories"], row["minor_involvement"], row["institutional_involvement"],
                 row["commercial_involvement"], row["group_involvement"], row["content_creation_involvement"],
-                row["is_test_case"], row["inclusion_note"],
+                row["is_test_case"], row["inclusion_note"], row.get("misattribution_flag", 0),
             ),
         )
 
