@@ -8,6 +8,6 @@ license: CC-BY-SA-4.0
 authors:
   - family-names: "Deng"
     given-names: "Nanyi"
-    # TODO(HRL-011): confirm academic name form and add ORCID iD before real release
+    orcid: "https://orcid.org/0009-0009-2017-049X"
 repository-code: "https://github.com/nanyi-deng/animal-harm-incident-database"
 # TODO(HRL-009): add Zenodo DOI (doi:) once an actual Zenodo release exists
