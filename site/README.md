@@ -1,10 +1,10 @@
 # AHID site (Astro, static)
 
-Public-facing incident browser. Static output only (PRD v1.2 C3's MVP downgrade — no server, no adapter). Not deployed anywhere yet.
+Public-facing incident browser. Static output (PRD v1.2 C3's MVP downgrade — no server, no adapter), plus exactly one serverless function: `api/submit.js`, the submission-intake endpoint behind `/submit/` (HRL-022). The function only creates labeled GitHub issues — it writes to no database and cannot touch published data. Deployment steps for it are in `DEPLOY.md` (Vercel, root directory = `site`).
 
 ## Status: built, not published
 
-`astro.config.mjs` ships `noindex, nofollow` and a placeholder `site:` URL on purpose. Per the same governance gate already applied to the OSF page and Zenodo publication (see `docs/human_review_log.md` HRL-002), this site does not go live until the family-risk assessment and hosting/identity decisions are resolved. Building it and populating it with real data is development work; deploying it publicly is a separate decision this repo doesn't make unilaterally.
+`astro.config.mjs` ships `noindex, nofollow` and a placeholder `site:` URL on purpose. The family-risk assessment (HRL-002) was signed off 2026-07-27, so the governance blocker is resolved — but actually deploying publicly (and removing noindex) remains a separate, explicit decision this repo doesn't make unilaterally. Deploying the submission UI per `DEPLOY.md` does not by itself publish the site.
 
 ## Data flow
 
