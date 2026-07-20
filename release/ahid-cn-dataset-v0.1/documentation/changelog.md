@@ -20,6 +20,14 @@
 
 第一轮 gold-standard 人工审计（2026-07-27，`human_review_log.md` HRL-018）：项目负责人核对全部 31 条流水线处理过的事件（含本数据集排除的 1 条内部测试用例），0 条内容错误，3 条轻微问题（均为来源可访问性问题，1 条经核实修复）。局限说明见 `known_limitations.md` 第三节。
 
+### 隐私 QA 签核（HRL-008，2026-07-27）
+
+候选人名启发式扫描（`pipeline/privacy_scan.py`）覆盖全部 185 段 claim/response 自由文本，未发现未经批准的真实姓名泄漏；4 条未成年人涉案事件逐条通读确认零身份线索。签核过程中发现并修复 1 处真实问题：#21、#22 两条事件（均为未成年人涉案）的正文精确到具体小区名，在小规模社区内有实质指认风险，已模糊到市/县级，其余事件的地点/机构细节保持原有精度不变（这正是本数据集的价值所在，不做统一模糊化）。详见 `human_review_log.md` HRL-008、HRL-015 与 `docs/privacy_qa_checklist.md`。
+
+### 许可证（HRL-005，2026-07-27）
+
+结构化数据采用 CC BY-SA 4.0（与 AI Incident Database 核心数据集合一致，经核实其官方 Terms of Use 确认），代码采用 MIT，均未加 NonCommercial 限制。
+
 ### 尚未完成、阻塞正式发布的事项
 
-许可证条款（HRL-005）、隐私 QA 签核（HRL-008）、Zenodo/ORCID 账号（HRL-009）均待定，详见主仓库 `docs/human_review_log.md`。
+Zenodo/ORCID 账号（HRL-009）待定，详见主仓库 `docs/human_review_log.md`。

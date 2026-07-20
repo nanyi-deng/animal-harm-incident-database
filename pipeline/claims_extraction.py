@@ -362,7 +362,10 @@ CLAIMS = {
         # ^ round 3 audit：此前遗漏对应的 rescue_response_found=1，已在 RESPONSE_FLAGS 补上
     ],
     "AHID-CN-2026-0021": [  # 徐州3名男孩虐猫
-        ("event_occurred", "徐州四季连城锦宸小区3名男孩持棍棒及锤子将一只白猫按压致死", "supported", 1, 1, 0, "high"),
+        # 地点原文精确到小区名（"四季连城锦宸小区"）；2026-07-27 隐私 QA 签核（HRL-008）
+        # 发现该精度可能在小范围社区内实质等同于指认涉事未成年人家庭，与 HRL-015
+        # "未成年人身份无例外匿名"的规则冲突，模糊到市级，保留原文其余细节
+        ("event_occurred", "徐州市3名男孩持棍棒及锤子将一只白猫按压致死", "supported", 1, 1, 0, "high"),
         ("event_date", "2026-07-13晚", "supported", 1, 1, 0, "high"),
         ("harm_method", "棍棒及锤子按压击打", "supported", 1, 1, 0, "high"),
         ("minor_involvement", "3名涉事者均为未成年男孩", "supported", 1, 1, 0, "high"),
@@ -371,7 +374,9 @@ CLAIMS = {
          "supported", 1, 1, 0, "high"),
     ],
     "AHID-CN-2026-0022": [  # 连云港两男童烧死萨摩耶 -- CONTRADICTED（赔偿是否达成一致）
-        ("event_occurred", "连云港东海县中央花园小区两名男童将点燃的烟花投入狗笼，烧死一只饲养7年的萨摩耶犬",
+        # 地点原文精确到小区名（"中央花园小区"）；同 #21，2026-07-27 隐私 QA 签核（HRL-008）
+        # 模糊到县级（东海县），理由同上
+        ("event_occurred", "连云港市东海县两名男童将点燃的烟花投入狗笼，烧死一只饲养7年的萨摩耶犬",
          "supported", 2, 2, 0, "high"),
         ("event_date", "2026-02-01中午12时34分许", "supported", 2, 2, 0, "high"),
         ("harm_method", "点燃烟花投入狗笼引发火灾", "supported", 2, 2, 0, "high"),
