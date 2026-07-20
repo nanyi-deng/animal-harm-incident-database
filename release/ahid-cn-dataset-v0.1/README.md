@@ -1,70 +1,59 @@
-# ahid-cn-dataset-v0.1 (staging build, not yet released)
+# AHID-CN Dataset v0.1
 
-This directory is a **local staging build** of the first versioned AHID-CN
-dataset package. It is assembled here for review and is **not** the
-Zenodo release — no DOI has been minted, and the data has not been made
-public. License (HRL-005) and privacy QA signoff (HRL-008) are both
-decided as of 2026-07-27 — `LICENSE_DATA.txt` is the real text, not a
-placeholder. The one remaining gate is HRL-009: no Zenodo account has
-been created yet, so nothing has actually been uploaded or published.
+First versioned release of the AHID-CN corpus — 30 animal harm incidents
+from Chinese-language public sources, processed through the Animal Harm
+Incident Database (AHID) pipeline: archiving, source-dependency analysis,
+claim extraction, and evidence-sufficiency scoring. See
+`methodology.md` in this package for full methods, and
+`known_limitations.md` for what this pilot-scale release is and is not.
 
-## What's in this snapshot
+Source code, issue tracker, and living documentation:
+https://github.com/nanyi-deng/animal-harm-incident-database
 
-30 incidents (Chinese-language public sources, Tier D URL-driven backfill —
-see `documentation/inclusion_exclusion_criteria.md`), 53 sources, 151 claims,
-34 structured institutional-response records. A 31st incident processed by
-the pipeline (the Zhengzhou false-report case) is excluded from this package
-by design — it is an internal test fixture used to validate the pipeline's
-handling of contradicted claims, not a real incident record.
+## Files
 
-```
-data/
-  incidents_public.csv    30 rows — one per incident
-  sources_public.csv      53 rows — every archived source, all availability
-                           statuses included (not just currently-reachable ones)
-  claims_public.csv       151 rows — every extracted claim, all support
-                           statuses included (contradicted and claimed_only
-                           claims are not filtered out; that they exist and
-                           how they were resolved is part of the record)
-  responses_public.csv    34 rows — institutional responses decomposed from
-                           claims_public (see documentation/known_limitations.md
-                           for how this decomposition was done and its limits)
-documentation/
-  data_dictionary.csv               field-by-field schema, types, enums
-  methodology.md                    full methods documentation
-  inclusion_exclusion_criteria.md   what qualifies an incident for inclusion
-  evidence_scoring_method.md        the evidence sufficiency score and
-                                     automation-status rules, in isolation
-                                     from the rest of methodology.md
-  known_limitations.md              honest accounting of what this dataset
-                                     is not yet — pilot scale, single-rater
-                                     audit, keyword-based response extraction
-  changelog.md                      what changed since there was no prior version
-LICENSE_DATA.txt          placeholder pending HRL-005
-CITATION.cff              placeholder pending HRL-011 (author name/ORCID)
-checksums.sha256          sha256 of every file in data/, for integrity
-                           verification after this package is copied/moved
-```
+Data (four tables, shared `incident_id` key; UTF-8 with BOM, Excel-safe):
 
-## Why sources/claims aren't pre-filtered here
+| File | Rows | One row per |
+|---|---|---|
+| `incidents_public.csv` | 30 | incident |
+| `sources_public.csv` | 53 | archived source — all availability statuses included, not just currently-reachable ones |
+| `claims_public.csv` | 151 | extracted checkable claim — contradicted and claimed-only claims included, not filtered out |
+| `responses_public.csv` | 34 | institutional response (police, court, school, agency) |
 
-`site/src/data/incidents.json` (the Astro site's data feed) hides sources
-that are no longer reachable and reorders claims by support status, because
-a website visitor clicking a dead link is a bad experience. A dataset
-released for research use has the opposite obligation: a source going dark
-after archiving, or a claim that turned out contradicted, is evidence the
-pipeline is supposed to preserve, not smooth over. `availability_status` and
-`support_status` are included as columns precisely so downstream analysis
-can decide how to treat each row, rather than the export deciding for it.
+Documentation:
 
-## Regenerating this package
+- `data_dictionary.csv` — field-by-field schema, types, enums (authoritative)
+- `methodology.md` — full methods documentation
+- `inclusion_exclusion_criteria.md` — what qualifies an incident for inclusion
+- `evidence_scoring_method.md` — the 0–100 evidence score and A1–A4/AX/AF status rules
+- `known_limitations.md` — honest accounting of limits: pilot scale, discovery bias, single-rater audit, keyword-based response extraction, correction boundaries of published versions
+- `changelog.md` — what this first version contains and notable build decisions
 
-```
-python3 pipeline/export_dataset_csvs.py
-sha256sum release/ahid-cn-dataset-v0.1/data/*.csv > release/ahid-cn-dataset-v0.1/checksums.sha256
-```
+Integrity: `checksums.sha256` holds SHA-256 hashes of the four data CSVs.
+License: `LICENSE_DATA.txt` (CC BY-SA 4.0 for the structured data; third-party
+source content is not redistributed and remains with its rights holders).
 
-`documentation/data_dictionary.csv` and `documentation/methodology.md` are
-verbatim copies of `docs/data_dictionary.csv` and `docs/methodology.md` in
-the main repository — re-copy them if those change. The other four files
-under `documentation/` are specific to this package and maintained here.
+## Why sources and claims aren't pre-filtered
+
+A dataset released for research use has the opposite obligation of a
+browsing website: a source that went dark after archiving, or a claim that
+turned out contradicted, is evidence the pipeline is supposed to preserve,
+not smooth over. `availability_status` and `support_status` are included as
+columns precisely so downstream analysis can decide how to treat each row,
+rather than the export deciding for it. (The project website filters for
+readability; this package does not.)
+
+## Do not use this dataset to rank regions or groups
+
+The corpus reflects publicly observable information collected via
+manually-sourced URLs (Tier D backfill), not automated discovery, and
+carries the reporting, platform, and deletion biases documented in
+`known_limitations.md`. It is a pilot-scale evidence base, not an
+incidence-rate estimate.
+
+## Citation
+
+See `CITATION.cff`. Cite the specific version (v0.1) and check the Zenodo
+record for any later corrected versions before use — published versions are
+immutable; corrections appear as new versions with changelog notes.
