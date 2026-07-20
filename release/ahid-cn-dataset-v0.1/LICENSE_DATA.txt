@@ -1,0 +1,18 @@
+LICENSE_DATA.txt — placeholder, not a binding license
+
+The license for this dataset's structured data (data/*.csv) has not yet
+been finalized. See docs/human_review_log.md, HRL-005, in the main
+repository for the decision this is pending.
+
+Current proposal under review (not yet confirmed):
+  - Structured data (incidents_public, sources_public, claims_public,
+    responses_public): CC BY 4.0
+  - Pipeline code: MIT (already applied at the repository level)
+  - Third-party source content (article text, media): remains with its
+    original rights holders; this dataset does not redistribute it —
+    only metadata, extracted claims, and archival status about it.
+
+Do not treat this file as a released license. It exists so this package's
+directory structure is complete for review; the actual LICENSE_DATA.txt
+that ships with a real release will replace this file once HRL-005 is
+decided.

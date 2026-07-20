@@ -1,0 +1,12 @@
+cff-version: 1.2.0
+message: "This is a staging build of ahid-cn-dataset-v0.1, not yet released. No Zenodo DOI has been minted. Until an actual release exists, cite the source code repository instead (see repository-code below)."
+title: "AHID-CN Dataset v0.1 (staging, unreleased)"
+type: dataset
+version: "0.1.0-staging"
+# date-released intentionally omitted -- not released yet
+authors:
+  - family-names: "Deng"
+    given-names: "Nanyi"
+    # TODO(HRL-011): confirm academic name form and add ORCID iD before real release
+repository-code: "https://github.com/nanyi-deng/animal-harm-incident-database"
+# TODO(HRL-009): add Zenodo DOI (doi:) once an actual Zenodo release exists
