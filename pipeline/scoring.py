@@ -76,17 +76,28 @@ def backfill_missing_fields(conn: sqlite3.Connection) -> None:
         UPDATE incidents_public SET official_source_count = (
             SELECT COUNT(*) FROM sources_public s
             WHERE s.incident_id = incidents_public.incident_id
-              AND s.source_tier = '1' AND s.first_collected_at IS NOT NULL
+              AND s.source_tier = '1' AND s.availability_status = 'available'
         )
         WHERE official_source_count IS NULL
     """)
 
 
 def independent_source_dimension_points(conn: sqlite3.Connection, incident_id: str) -> tuple[float, float]:
-    """Returns (points out of 20, effective_units) for the highest-weighted dimension."""
+    """Returns (points out of 20, effective_units) for the highest-weighted dimension.
+
+    Filters to availability_status='available' -- a source Stage 1 flagged as a
+    soft-404 or anti-bot block still gets a cluster_id from Stage 2 (that's a
+    fair reflection of "we couldn't determine its relationship to anything"),
+    but it must not earn scoring credit here as if it were a verified,
+    content-bearing corroborating source. Caught on the first scoring run: two
+    incidents (#22 Xuzhou, #28 highway abandonment) each had one blocked source
+    still counting toward their independent-sources score, inflating both past
+    what the actually-available evidence supports.
+    """
     clusters = conn.execute(
         "SELECT independent_cluster_id, COUNT(*) FROM sources_public "
         "WHERE incident_id = ? AND independent_cluster_id IS NOT NULL "
+        "AND availability_status = 'available' "
         "GROUP BY independent_cluster_id",
         (incident_id,),
     ).fetchall()
@@ -107,14 +118,19 @@ def independent_source_dimension_points(conn: sqlite3.Connection, incident_id: s
 def score_incident(conn: sqlite3.Connection, row: sqlite3.Row) -> dict:
     incident_id = row["incident_id"]
 
+    # All three queries below filter to availability_status='available', not just
+    # first_collected_at IS NOT NULL -- a soft-404 or anti-bot-blocked fetch still
+    # sets first_collected_at (Stage 1 got *a* response), but it isn't real,
+    # usable content and must not earn scoring credit. See the docstring on
+    # independent_source_dimension_points for the bug this fixes.
     best_tier = conn.execute(
-        "SELECT MIN(source_tier) FROM sources_public WHERE incident_id = ? AND first_collected_at IS NOT NULL",
+        "SELECT MIN(source_tier) FROM sources_public WHERE incident_id = ? AND availability_status = 'available'",
         (incident_id,),
     ).fetchone()[0]
     primary_source_pts = SOURCE_TIER_POINTS.get(best_tier, 0)
 
     n_archived = conn.execute(
-        "SELECT COUNT(*) FROM sources_public WHERE incident_id = ? AND first_collected_at IS NOT NULL",
+        "SELECT COUNT(*) FROM sources_public WHERE incident_id = ? AND availability_status = 'available'",
         (incident_id,),
     ).fetchone()[0]
     media_preservation_pts = 8 if n_archived >= 1 else 0  # of 10 -- see module docstring
@@ -172,7 +188,7 @@ def run(db_path: Path) -> None:
         incident_id = row["incident_id"]
         scoring = score_incident(conn, row)
         n_sources = conn.execute(
-            "SELECT COUNT(*) FROM sources_public WHERE incident_id = ? AND first_collected_at IS NOT NULL",
+            "SELECT COUNT(*) FROM sources_public WHERE incident_id = ? AND availability_status = 'available'",
             (incident_id,),
         ).fetchone()[0]
         status = determine_status(row, scoring["effective_units"], n_sources)

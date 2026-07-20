@@ -86,6 +86,16 @@ INCIDENT_CORRECTIONS = {
         # archived CCTV Finance piece is actually about Rugao/Jining, no Kunshan mention)
         "province": "江苏省", "city": "如皋市", "location_precision": "district",
     },
+    # --- Round 2 (2026-07-27) corrections, found reading the newly archived text ---
+    "AHID-CN-2026-0020": {  # seed #21, Chongqing "Sam's Club bagging guy"
+        "estimated_animal_count": "3+ survivors, multiple additional deaths/missing",
+    },
+    "AHID-CN-2026-0027": {  # seed #28, highway abandonment -- the source that actually stated
+        # the specific date (羊城晚报) failed to archive (anti-bot block); the surviving 网易
+        # source corroborates the event but doesn't restate the exact date in what was extracted.
+        # Downgrading date_status accordingly rather than keeping unwarranted confidence.
+        "date_status": "claimed_only",
+    },
 }
 
 # --- Response flags on incidents_public, set only where the archived text
@@ -115,6 +125,19 @@ RESPONSE_FLAGS = {
     "AHID-CN-2026-0017": dict(official_response_found=1, police_response_found=1),
     "AHID-CN-2026-0018": dict(official_response_found=0),  # investigative piece; no enforcement case exists
     "AHID-CN-2026-0019": dict(official_response_found=1, police_response_found=1, legal_outcome_found=1),
+    # --- Round 2 (2026-07-27) ---
+    "AHID-CN-2026-0020": dict(official_response_found=1, police_response_found=1, legal_outcome_found=0),
+    # ^ Chongqing: case formally opened + administrative detention, but no court outcome yet
+    "AHID-CN-2026-0021": dict(official_response_found=1, police_response_found=1, school_response_found=0),
+    "AHID-CN-2026-0022": dict(official_response_found=1, police_response_found=1),
+    "AHID-CN-2026-0023": dict(official_response_found=1, school_response_found=1, police_response_found=1),
+    "AHID-CN-2026-0024": dict(official_response_found=1),  # 海洋馆自身机构回应，非政府监管部门
+    "AHID-CN-2026-0025": dict(official_response_found=1),  # 动物园自身机构回应；另有更早的官方（林业和草原
+    # 局）投诉答复，见 claims -- 但那是回应"长期虐待"的更早投诉，不是回应这次1月23日事件本身
+    "AHID-CN-2026-0026": dict(official_response_found=1, legal_outcome_found=1, policy_response_found=1),
+    # ^ 法院判决 + 涉事机构主动辟谣（policy_response 借用来记录"机构辟谣行动"，非严格意义的政策回应，
+    # 但现有 enum 里没有更贴切的选项，claims 里会写清楚具体是什么）
+    "AHID-CN-2026-0027": dict(official_response_found=0),  # 记者实地发现报道，未见对应监管部门回应
 }
 
 # --- Claims. Each tuple: (claim_type, claim_value, support_status,
@@ -300,6 +323,97 @@ CLAIMS = {
                               "处以治安拘留或行政处罚", "supported", 1, 1, 0, "high"),
         ("legal_outcome", "2名组织者被刑事拘留（开设赌场罪）", "supported", 1, 1, 0, "high"),
     ],
+    # --- Round 2 (2026-07-27, HRL-016) ---
+    "AHID-CN-2026-0020": [  # 重庆"山姆打包哥"李某（HRL-015：官方通报本身匿名为"李某"，
+        # 维基百科条目用真名"李萌"，但官方信源是更权威的一手来源，AHID 记录跟随官方口径，不采用真名）
+        ("event_occurred", "重庆两江新区男子李某长期以领养为名骗取猫狗，实施虐待并致多只动物死亡", "supported", 3, 3, 0, "high"),
+        ("event_date", "2026-03（邻居首次报案）～2026-06-09（正式立案）", "supported", 3, 3, 0, "high"),
+        ("harm_method", "锯平牙齿、剪断尾巴、折断骨骼；将已死亡动物从高层阳台抛下", "supported", 3, 3, 0, "high"),
+        ("animal_death", "至少1只成年犬及多只动物死亡；3只幸存犬送医收容；另有多只动物下落不明", "supported", 3, 3, 0, "high"),
+        ("official_response", "2026-03邻居首次报案时警方因证据不足未采取有效措施；2026-06-05报案时办案警员"
+                              "表示\"打杀狗不犯法\"、将事件定性为民事纠纷，处理消极；经持续曝光及民众聚集后，"
+                              "2026-06-09两江新区公安分局正式立案调查，06-10对李某处以行政拘留",
+         "supported", 2, 2, 0, "high"),
+        # ^ 故意在同一条 claim 里呈现官方回应从消极到积极的转变过程，不美化也不隐藏早期不作为
+        ("policy_response", "事件引发数百市民及志愿者连续多日聚集抗议，要求订立专门反虐待动物法；"
+                            "警方对集会现场进行清场并对网上流传的集会影像进行审查", "partially_supported", 1, 1, 0, "medium"),
+    ],
+    "AHID-CN-2026-0021": [  # 徐州3名男孩虐猫
+        ("event_occurred", "徐州四季连城锦宸小区3名男孩持棍棒及锤子将一只白猫按压致死", "supported", 1, 1, 0, "high"),
+        ("event_date", "2026-07-13晚", "supported", 1, 1, 0, "high"),
+        ("harm_method", "棍棒及锤子按压击打", "supported", 1, 1, 0, "high"),
+        ("minor_involvement", "3名涉事者均为未成年男孩", "supported", 1, 1, 0, "high"),
+        ("official_response", "辖区九里派出所于当晚介入，对涉事男孩及家长进行批评教育；其中一名男孩家长自称"
+                              "已对孩子进行教育与体罚；未见任何一方被送专门学校或其他更严厉处置",
+         "supported", 1, 1, 0, "high"),
+    ],
+    "AHID-CN-2026-0022": [  # 连云港两男童烧死萨摩耶 -- CONTRADICTED（赔偿是否达成一致）
+        ("event_occurred", "连云港东海县中央花园小区两名男童将点燃的烟花投入狗笼，烧死一只饲养7年的萨摩耶犬",
+         "supported", 2, 2, 0, "high"),
+        ("event_date", "2026-02-01中午12时34分许", "supported", 2, 2, 0, "high"),
+        ("harm_method", "点燃烟花投入狗笼引发火灾", "supported", 2, 2, 0, "high"),
+        ("animal_death", "萨摩耶犬被烧死", "supported", 2, 2, 0, "high"),
+        ("official_response", "施害男孩家长一方陈述：警方已当面调解，两家各赔3000元共6000元并签订协议书，"
+                              "双方达成一致", "partially_supported", 1, 1, 1, "medium"),
+        ("official_response", "狗主人姜女士一方陈述：警方提出联合赔偿6000元或另赔一只狗的方案，但她和家人"
+                              "并未接受，坚持要求男孩家属在业主群公开道歉", "contradicted", 1, 1, 1, "medium"),
+        # ^ 两条互斥的 official_response claim：施害方与受害方对"是否已达成调解协议"陈述不一致，
+        # 均予保留，不采信任何一方
+    ],
+    "AHID-CN-2026-0023": [  # 大邑4初中生虐猫
+        ("event_occurred", "成都大邑县安仁镇学校八年级二班4名学生买猫后虐待并拍视频发布网络", "supported", 2, 2, 0, "high"),
+        ("event_date", "2024-12-07晚（事件）/ 2024-12-11（教育局通报）", "supported", 2, 2, 0, "high"),
+        ("harm_method", "用打火机烧猫脸部、用石头砸猫头部、用脚将猫踹飞", "supported", 2, 2, 0, "high"),
+        ("minor_involvement", "4名涉事者均为在校初中生", "supported", 2, 2, 0, "high"),
+        ("official_response", "大邑县教育局联合辖区派出所核查；对涉事学生批评教育，给予停课反省处理，安排"
+                              "专业人员心理辅导及行为干预", "supported", 2, 2, 0, "high"),
+    ],
+    "AHID-CN-2026-0024": [  # 郑州锦艺城海洋馆海狮被踢
+        ("event_occurred", "郑州锦艺城海洋馆驯养员在海狮表演结束后于后台脚踢海狮，游客拍摄曝光", "supported", 2, 2, 0, "high"),
+        ("event_date", "2025-05-21（事件）/ 2025-05-22（园方通报）", "supported", 2, 2, 0, "high"),
+        ("harm_method", "驯养师称因遭海狮攻击而脚踢海狮作为反应", "supported", 2, 2, 0, "high"),
+        ("official_response", "园方与涉事驯养员解除劳动合同，暂停营业进行闭馆整顿", "supported", 2, 2, 0, "high"),
+    ],
+    "AHID-CN-2026-0025": [  # 西双版纳野生动物园小象被打 -- 含长期虐待指控与官方早前调查的矛盾
+        ("event_occurred", "西双版纳野生动物园饲养员用金属锁多次砸向两只未成年亚洲象（\"念念\"5岁、\"乐宝\"近4岁）头部",
+         "supported", 2, 2, 0, "high"),
+        ("event_date", "2026-01-21（视频拍摄）/ 2026-01-23（视频网传及园方通报）", "supported", 2, 2, 0, "high"),
+        ("harm_method", "手持金属锁多次砸向象头部，并高声呵斥", "supported", 2, 2, 0, "high"),
+        ("official_response", "园方发布情况说明，承认饲养员\"操作不规范\"，对其严肃批评教育；兽医检查后称"
+                              "小象身体状况良好", "supported", 2, 2, 0, "high"),
+        ("official_response", "多名网友称该园小象长期被虐待、饲养环境差、屡遭殴打；但西双版纳州景洪市林业和"
+                              "草原局在2025年4月对相关投诉的官方回复认定\"念念\"身体健康、生活环境达标（室内"
+                              "86平方米、室外890平方米）", "contradicted", 1, 1, 1, "medium"),
+        # ^ 游客长期虐待指控 vs 更早的官方调查结论相互矛盾，均予记录；注意后者回应的是更早的一般性投诉，
+        # 不是专门针对本次1月23日这一具体事件的调查
+    ],
+    "AHID-CN-2026-0026": [  # 大熊猫网络谣言案 -- AF 类型；harm_categories 故意留空
+        ("event_occurred", "网名\"大辽皇后\"的主播白某红与徐某于2023年3月至2024年5月在抖音、快手等平台散布"
+                          "中国大熊猫保护研究中心及工作人员\"虐待大熊猫\"\"电击取精\"等虚假信息，并编造工作"
+                          "人员因违规违纪被查处等不实内容，煽动网民投诉、举报、辱骂相关单位及个人",
+         "contradicted", 2, 2, 0, "high"),
+        # ^ 核心 claim 本身即被证伪：不存在真实的大熊猫虐待事件，这是本案与其余18条候选的本质区别
+        ("event_date", "2023-03～2024-05（散布期间）", "supported", 2, 2, 0, "high"),
+        ("official_response", "都江堰市人民法院一审公开审理，以寻衅滋事罪判处白某红有期徒刑1年6个月、徐某"
+                              "有期徒刑1年2个月；（2025）川0181刑初69号，2025-06-26宣判，双方均未上诉、"
+                              "检察机关未抗诉，判决已生效", "supported", 2, 2, 0, "high"),
+        ("legal_outcome", "白某红、徐某均以寻衅滋事罪定罪量刑；该案入选四川法院年度优秀案例及全国法院案例库，"
+                          "系全国首例涉大熊猫网络谣言、网络暴力刑事案件", "supported", 2, 2, 0, "high"),
+        ("policy_response", "中国大熊猫保护研究中心等相关单位自谣言传播初期起，通过官方微博、微信公众号、"
+                            "中央政法媒体及中国互联网联合辟谣平台等渠道发布辟谣信息", "supported", 1, 1, 0, "high"),
+        ("rescue_outcome", "造谣行为导致大熊猫人工繁育国际科研合作项目一度停滞；未见大熊猫本身受到任何实际"
+                           "伤害的记录", "supported", 2, 2, 0, "high"),
+    ],
+    "AHID-CN-2026-0027": [  # 乐山-重庆高速62具宠物尸体 -- 无单一施害人，HRL-014 性质
+        ("event_occurred", "一男子驾车沿乐山至重庆约300公里高速路段，累计发现62具猫狗尸体，其中约七八只为犬，"
+                          "其余多为猫；部分犬只穿着衣物、毛发整洁，推测系家养宠物", "supported", 1, 1, 0, "high"),
+        ("event_location", "四川乐山至重庆高速沿线（跨川渝两地，无法归入单一省市）", "supported", 1, 1, 0, "high"),
+        ("harm_method", "报道推测系春节返乡途中因运输防护不足导致宠物死亡或被沿途遗弃，非单一施害人的蓄意"
+                        "行为；报道同时提及湖北嘉鱼至武汉高速段另有两只犬只因车窗未关跳车被撞死的类似个案",
+         "claimed_only", 1, 1, 0, "medium"),
+        ("official_response", "报道中未见交通或农业农村部门就本次乐山-重庆事件发布对应调查或处理通报",
+         "unknown", 1, 1, 0, "low"),
+    ],
 }
 
 
@@ -361,9 +475,10 @@ def apply(db_path: Path) -> None:
     incidents_with_claims = conn.execute(
         "SELECT COUNT(DISTINCT incident_id) FROM claims_public"
     ).fetchone()[0]
+    n_total_incidents = conn.execute("SELECT COUNT(*) FROM incidents_public").fetchone()[0]
     conn.close()
 
-    print(f"Wrote {n_claims} claims across {incidents_with_claims}/19 incidents "
+    print(f"Wrote {n_claims} claims across {incidents_with_claims}/{n_total_incidents} incidents "
           f"({n_contradicted} marked contradicted). Applied {len(INCIDENT_CORRECTIONS)} "
           f"incident field corrections and {len(RESPONSE_FLAGS)} response-flag updates.")
 
