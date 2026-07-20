@@ -1,51 +1,81 @@
-# AHID Methodology（骨架 — v0.1 目标：2026-08 成稿）
+# AHID Methodology
 
-> 本文档是公开方法说明与未来方法论文（working paper）的共同底稿。每节标注状态：`stub` / `draft` / `final`。
+> 本文档是公开方法说明与未来方法论文（working paper）的共同底稿。每节标注状态：`stub` / `draft` / `final`。截至 2026-07-27，尚无任何事件数据；本稿描述的是研究版 MVP（PRD v1.2 C11）的设计，待 9 月 pilot 后用真实运行结果校正。
 
-## 1. Overview and Positionality — `stub`
+## 1. Overview and Positionality — `draft`
 
-项目定位（incident database，非定罪平台）；与 AI Incident Database 方法论谱系的关系；**positionality 声明**：项目起源于旺旺个案倡议，此起源对收录优先级的潜在影响及缓解措施（PRD v1.2 C8）。
+AHID（Animal Harm Incident Database，动物伤害事件数据库）是一个开源、多语言的事件数据库，目标是系统性发现、保存、去重、归并并交叉核验中国大陆动物伤害相关的公开互联网信息。首期语料 AHID-CN 覆盖简体中文公开来源。
 
-## 2. Scope and Inclusion Criteria — `stub`
+AHID 的方法论谱系与 AI Incident Database（AIID）系列一致：两者共享同一个核心问题——当公开信息零散、易被删除、易被误传，且错误归因代价很高时，如何以可复现、可核验、透明表达不确定性的方式，将其转化为结构化的研究记录。AHID 记录的是事件与制度回应，而非对个人的司法或道德判断（见 §7）。
 
-地理与事件范围（PRD §7）；默认不收录清单；AHID-CN 语料定义。
+**Positionality.** 本项目起源于一起具体的公众动物伤害个案（"旺旺事件"）引发的公众关注。这一起源对项目的潜在影响包括：早期收录判断可能受该个案传播模式的锚定；创始人对该个案的既有认知可能影响其证据评估的独立性。缓解措施：（a）收录标准在 PRD §7 中前置定义，独立于任何单一个案；（b）该个案与其他事件适用完全相同的自动化流程与人工审计（§8）；（c）证据充分度评分与反证检索强制展示冲突信息（PRD §19.5），不因个案的公众关注度而降低核验标准。
+
+## 2. Scope and Inclusion Criteria — `draft`
+
+**地理范围**（PRD §7.1）：中国大陆发生的公开报道事件；与中国大陆机构、企业或个人活动直接相关的跨境事件；海外平台传播但被声称发生在中国大陆的候选事件。
+
+**事件范围**（PRD §7.2）：蓄意伤害行为（殴打、火烧、刺伤、投毒等）、持续折磨或致死、严重遗弃/饥饿/医疗忽视、以牟利或流量为目的的虐待拍摄、强迫动物争斗、非人道捕捉/运输/收容/扑杀、机构性伤害（繁殖场、宠物店、动物园等）、涉及未成年人的动物暴力事件、引发政府调查或公共争议的事件。
+
+**默认不收录**（PRD §7.3）：无具体事件的观点表达；正常兽医治疗画面；普通动物伤人事件（人被动物所伤）；无法溯源的纯文字传言；仅有合成图片而无现实事件主张的内容；以人肉搜索为主要内容的帖子；一般养宠争议且无严重伤害。
+
+**AHID-CN 定义**：首期语料的所有事件均以简体中文为主要信息来源语言；地理范围限定如上。未来语料扩展（如 AHID-KR）将独立定义收录范围，不影响 AHID-CN 已发布记录。
 
 ## 3. Data Model — `draft`
 
-六对象模型（Incident / Source / Media Asset / Claim / Evidence Relation / Response，PRD §8）；公开数据集四表结构见 `data_dictionary.csv`（权威版本）。
+六对象模型：Incident（现实世界候选事件）、Source（描述该事件的网页/帖子/文件）、Media Asset（图片/视频/音频/存档）、Claim（可单独核查的事实主张）、Evidence Relation（来源或媒体与 Claim 的支持/反驳/重复/提及关系）、Response（机构后续行动）。
 
-## 4. Source Tiers and Independence — `stub`
+公开数据集导出为四张表——`incidents_public`、`sources_public`、`claims_public`、`responses_public`——字段定义以 `data_dictionary.csv` 为唯一权威版本；本文档不复述具体字段，仅描述设计原则。核心设计原则：`incident_id` 不编码地理信息（PRD v1.2 C1），因为地理归属属于可被更正的字段而 ID 必须终身稳定；每条 Response 必须可追溯至记录它的 Source（`data_dictionary.csv` 一致性约束）。
 
-来源四级体系（PRD §11.1）；来源依赖图；**独立性三值保守判定规则**（PRD v1.2 C4）——方法论文的核心贡献之一。
+## 4. Source Tiers and Independence — `draft`
 
-## 5. Pipeline — `stub`
+**来源四级体系**（PRD §11.1）：Tier 1 权威公开来源（政府、公安、法院等）；Tier 2 专业或具名来源（主流媒体、注册救援组织、具名记者）；Tier 3 第一手公众来源（原始发布者、目击者）；Tier 4 二次传播来源（搬运、聚合、未注明来源的转发）。来源等级只影响证据分值，不直接决定事件真假。
 
-研究版 MVP 采集方式：Tier D URL 驱动回填（无自动发现）；归档、去重（URL/文本/图片/视频 Hash）、事件归并、Claim 提取、反证检索各环节；每个机器提取字段携带 value / confidence / evidence_span / source_id / model_version。
+**来源依赖图**（PRD §16）：系统显式建模来源之间的引用关系——十个转发同一条微博的账号构成一个独立来源簇，而非十项独立佐证。判定信号包括：是否引用同一 URL、是否使用相同图片/视频、文字是否高度一致、发布时间是否晚于共同来源、是否存在独立采访或新增证人/文件。
 
-## 6. Evidence Sufficiency Scoring — `stub`
+**独立性三值判定（PRD v1.2 C4，方法论核心贡献）**：来源独立性是证据充分度评分中权重最高（20/100）也最难自动化的判断。研究版 MVP 采用保守三值规则而非二值分类：相同媒体 Hash → 归为同一来源簇；存在明确引用链（引用同一 URL、"据某媒体"措辞、正文高度重合且时间晚于共同源）→ 同一来源簇；其余情形一律标记为 `independence_unknown`，按独立簇的部分分值（初始设定 50%）计入评分，而非默认计为独立或默认计为零。这一设计选择、其对最终分数分布的影响，以及与人工判定的一致度，是 §8 gold-standard 审计的核心评估问题之一。
 
-评分结构与权重（PRD §20，v0 未校准）；扣分规则与下限；分数与状态（A0–A4/AX/AF）的判定关系（PRD v1.2 C4）；score_version 版本管理。
+## 5. Pipeline — `draft`
 
-## 7. Privacy, Minors, and Identity Protection — `stub`
+研究版 MVP（PRD v1.2 C11）采用 Tier D（URL 驱动）采集，不做自动发现：人工收集已知事件的公开 URL（含项目起源个案），脚本执行以下环节：
 
-去身份化原则；未成年人字段联动规则（minor_involvement=yes → 全库无身份字段）；face detection（允许，仅遮挡）与 face recognition（禁止）的区分；公开层不再分发第三方媒体原则（PRD v1.2 C2）。
+1. **归档**：保存原始 URL、规范化 URL、抓取时间、页面正文、媒体文件副本（受限内部存储，不进入公开层）与文件 Hash。
+2. **去重**：URL 层（剥离追踪参数、短链接展开）；文本层（MinHash/相似度）；媒体层（感知 Hash，v0 对视频仅做基础 pHash + SHA-256，深度视频 Embedding 去重推迟至 Phase 2'）。
+3. **事件归并**：按时间、地点、动物类型、伤害方式、媒体 Hash 等特征计算相似度，阈值化为高/中/低三档（高→自动合并，中→`possibly_related`，低→独立事件）。
+4. **Claim 提取**：从来源中提取可核查主张（事件是否发生、日期、地点、动物种类/数量、伤害方式、机构回应等），每个提取字段携带 `value`、`confidence`、`evidence_span`、`source_id`、`model_version`。
+5. **证据与反证检索**：主动搜索独立佐证与反证（旧视频、异地视频、辟谣信息），反证不得被隐藏。
+
+每个自动化环节的输出都是下一环节的输入候选，而非最终判定——发布与否由规则引擎（非语言模型）根据 §6 的分数与状态共同决定。
+
+## 6. Evidence Sufficiency Scoring — `draft`
+
+评分衡量"当前公开证据在多大程度上支持建立一个可用的事件档案"，不等同于法律事实认定或"真实性概率"。七个维度：原始来源（0–15）、媒体保存（0–10）、时间支持（0–15）、地点支持（0–15）、独立来源（0–20）、权威记录（0–15）、动物后续（0–5）、一致性（0–5），总分 0–100，扣分规则不产生负数。
+
+**状态与分数的判定关系**（PRD v1.2 C4）：自动状态（A1–A4/AX/AF）由规则条件独立判定（独立来源簇数量、权威来源有无、重大反证有无），分数只决定该状态对应页面是否达到公开门槛——两套体系不互相推导。所有权重标注为 v0（未经校准），随 `score_version` 字段随数据集一同发布；待 §8 的 gold-standard 集积累后，权重校准过程本身将是方法论文的一节。
+
+## 7. Privacy, Minors, and Identity Protection — `draft`
+
+**去身份化原则**（PRD §6.4）：系统默认记录事件，不记录普通个人身份。`minor_involvement = yes` 时，全数据集不含任何身份字段（姓名、面部、学校、住址）——这是一条硬性的字段联动规则，而非逐案判断。
+
+**人脸处理**：区分 face detection（人脸检测，允许，且仅用于自动遮挡等保护性处理）与 face recognition/identity matching（人脸识别/身份匹配，全面禁止，包括跨事件的人脸比对）。这一术语区分修正了 PRD v1.0 中检测/识别混用造成的表面矛盾（PRD v1.2 C6）。
+
+**媒体再分发**：公开层（网站、API、下载）在任何情况下不重新分发第三方媒体文件，只提供来源元数据、文件 Hash、存档状态与文字描述（PRD v1.2 C2）。原始媒体副本仅存于受限内部存档，用途限于证据保存、去重计算与研究核验。
 
 ## 8. Human Audit and Gold-Standard Set — `stub`
 
-季度抽样审计设计（≥30 事件）；标注维度（聚类/去重/字段/独立性）；precision 报告；gold set 的三重用途（权重校准、论文评估、回归测试）；标注工具（human-label-tool）。**方法论文的评估章。**
+季度抽样审计（≥30 事件，PRD v1.2 C5）人工核对事件聚类、去重判定、字段提取与独立性判定的正确性；结果累积为 gold-standard 评估集，用于权重校准、方法论文评估表、模型/规则变更的回归测试。标注工具复用既有的 human-label-tool。本节待 9 月 pilot 产生首批标注数据后补全为 draft。
 
-## 9. Multilingual Generation — `stub`
+## 9. Multilingual Generation — `draft`
 
-模板本地化架构（PRD v1.2 C10）：模板一次性定稿、槽位程序化填充、OpenCC 简繁转换、残余文本 Cloud Translation + glossary + 脚本化 QA、失败回退。
+六语首发（简中/繁中/英/西/日/韩）采用模板本地化架构（PRD v1.2 C10），而非逐事件机器翻译：固定摘要模板（PRD §22.3）每语一次性翻译定稿并人工核对一遍；日期、数字、地名、受控词表值通过程序化槽位填充，不经过翻译引擎；简→繁经 OpenCC 确定性转换；仅残余自由文本经 Google Cloud Translation（启用术语表锁定）处理，并配脚本化质量检查（数字/日期一致性、否定词核对、回译相似度）。任一语言 QA 未通过时回退为显示简体中文与英语。此架构的动机是在系统层面消除自由文本机翻在否定词、语气强度上的失败模式，而非依赖逐篇人工校对拦截。
 
-## 10. Known Biases and Limitations — `stub`
+## 10. Known Biases and Limitations — `draft`
 
-报道/地区/平台/语言/内容/删除/模型七类偏差（PRD §33）；"数据库不代表真实发生率"的解释边界。
+数据库反映的是"公开可观察信息"，不代表真实发生率，不应用于地区或群体排名（PRD §33，§40）。七类已知偏差：报道偏差（曝光多不等于发生多）、地区偏差（网络活跃地区被过度收录）、平台偏差（无法访问的平台造成样本缺失）、语言偏差（方言与规避词导致漏检）、内容偏差（极端事件更易传播、长期性问题被低估）、删除偏差（快速删除的内容更难核验）、模型偏差（视觉模型可能误判正常兽医/屠宰/影视内容）。研究版 MVP 额外引入**发现方式偏差**：Tier D（URL 驱动回填）依赖创始人已知的事件线索，覆盖面系统性小于未来自动发现阶段，此偏差需在 v0.1 数据集的方法声明中明确披露。
 
-## 11. Ethics and Governance — `stub`
+## 11. Ethics and Governance — `draft`
 
-IRB determination（结果待补，见 human_review_log HRL-004）；申诉与更正机制及 SLA；存续与落日条款；规则引擎（非 LLM）作为发布决策者。
+IRB determination 材料已起草（`docs/irb/irb_determination_request_draft.md`），提交与结果记录见 `human_review_log.md` HRL-004；结论将在此节补全。申诉机制：涉及身份/未成年人/法律威胁的高风险申诉即时自动进入限制状态，人工处理承诺 14 天内完成；一般申诉 30 天内处理（PRD v1.2 C7）。存续机制：每季度 Zenodo snapshot 兼作正式存续记录；项目停止维护满 12 个月后发布最终 snapshot 并将网站转为静态只读（PRD v1.2 C9）。发布决策由规则引擎而非语言模型执行（PRD §27.5）。
 
 ## 12. Versioning and Citation — `stub`
 
-数据集季度 snapshot 与 Zenodo DOI；score_version / ruleset_version / model_version 三版本体系；引用规范。
+数据集按季度或达到实质增量时发布 Zenodo snapshot（而非持续变化的网站状态），每个版本关联 `score_version`、`ruleset_version`、`model_version` 三个独立版本号。引用格式待 `ahid-cn-dataset-v0.1` 发布后补全（预期 2026-10 上旬）。
