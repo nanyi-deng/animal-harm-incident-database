@@ -30,9 +30,24 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 USER_AGENT = (
-    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
-    "(KHTML, like Gecko) Chrome/124.0 Safari/537.36"
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 "
+    "(KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
 )
+# Found via the gold-standard audit (2026-07-27): news.ycwb.com's WAF (Alibaba
+# Cloud, "ESA"/acw_tc cookies) returned a gzip-compressed denial page for a
+# bare User-Agent-only request (x-tengine-error: denied by http_custom), but
+# passed cleanly once Accept/Accept-Language/Referer were added -- these are
+# headers any real browser sends by default, not evasion of any access
+# control (PRD §11.3 still prohibits captcha/login bypass, fake accounts,
+# proxy pools; a complete standard header set is none of those). Re-tested
+# dutenews.com's separate 405 with the same fuller headers -- still a genuine
+# 405 (title literally "405"), confirming that one is a real dead endpoint,
+# not a header-sensitivity false negative.
+REQUEST_HEADERS_EXTRA = {
+    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
+    "Accept-Language": "zh-CN,zh;q=0.9",
+    "Referer": "https://www.google.com/",
+}
 REQUEST_DELAY_SECONDS = 1.5
 REQUEST_TIMEOUT_SECONDS = 20
 
@@ -70,7 +85,7 @@ def fetch(url: str) -> tuple[int | None, bytes | None, str | None]:
     # (uncompressed) per HTTP spec, but at least one in this pilot's source
     # list (m.gmw.cn) sends gzip regardless. Decompress explicitly based on
     # the actual Content-Encoding response header rather than trust that.
-    req = urllib.request.Request(url, headers={"User-Agent": USER_AGENT})
+    req = urllib.request.Request(url, headers={"User-Agent": USER_AGENT, **REQUEST_HEADERS_EXTRA})
     try:
         with urllib.request.urlopen(req, timeout=REQUEST_TIMEOUT_SECONDS) as resp:
             raw = resp.read()
@@ -82,14 +97,23 @@ def fetch(url: str) -> tuple[int | None, bytes | None, str | None]:
         return None, None, str(e)
 
 
-def archive(db_path: Path, archive_dir: Path) -> None:
+def archive(db_path: Path, archive_dir: Path, retry_failed: bool = False) -> None:
     conn = sqlite3.connect(db_path)
     conn.executescript(open(Path(__file__).parent / "schema.sql", encoding="utf-8").read())
     archive_dir.mkdir(parents=True, exist_ok=True)
 
-    pending = conn.execute(
-        "SELECT source_id, original_url FROM sources_public WHERE first_collected_at IS NULL"
-    ).fetchall()
+    if retry_failed:
+        # Re-attempt sources previously marked unavailable, not just untried ones --
+        # for re-checking after a fetch-logic fix (e.g. the 2026-07-27 header fix
+        # found via the gold-standard audit), not for routine runs.
+        pending = conn.execute(
+            "SELECT source_id, original_url FROM sources_public "
+            "WHERE first_collected_at IS NULL OR availability_status != 'available'"
+        ).fetchall()
+    else:
+        pending = conn.execute(
+            "SELECT source_id, original_url FROM sources_public WHERE first_collected_at IS NULL"
+        ).fetchall()
 
     if not pending:
         print("Nothing to archive -- every source already has first_collected_at set.")
@@ -159,5 +183,8 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--db", type=Path, default=Path(__file__).parent / "ahid_pilot.sqlite3")
     parser.add_argument("--archive-dir", type=Path, default=Path(__file__).parent / "archive")
+    parser.add_argument("--retry-failed", action="store_true",
+                         help="Re-attempt sources with availability_status != 'available', "
+                              "not just untried ones (for re-checking after a fetch-logic fix)")
     args = parser.parse_args()
-    archive(args.db, args.archive_dir)
+    archive(args.db, args.archive_dir, retry_failed=args.retry_failed)

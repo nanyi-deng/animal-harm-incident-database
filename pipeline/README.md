@@ -91,4 +91,25 @@ Both are now caught by title/content heuristics in `archive_sources.py` and corr
 
 **Several details downgraded to `claimed_only` rather than trusted at face value**, because the vivid specifics that made these candidates compelling in search summaries didn't survive contact with the one archived primary source for each: #29 (Shanxi campus cat)'s "school escalated to filing a police report" detail isn't in the one archived article; #30 (Nanning bank employee)'s "killed 16 cats in one night" and livestream-extortion details aren't in the bank's own (deliberately terse) notice; #31 (Zhejiang police college teacher)'s "~300 animals in half a year" figure is an unverified tip-off claim, not something the school's own disciplinary notice confirms. All three keep their `event_occurred` and `official_response` claims as `supported` — only the unconfirmed embellishments were downgraded, not the underlying incidents.
 
-**Final distribution across all 31 incidents:** 22 `A4`, 2 `AX`, 1 `A2`, 5 `A1`, 1 `AF`, 0 `A3`. Publishable under PRD §22.1 thresholds: **6/31**.
+**Distribution after Round 3 (31 incidents, before the audit fix below):** 22 `A4`, 2 `AX`, 1 `A2`, 5 `A1`, 1 `AF`, 0 `A3`.
+
+## Gold-standard audit round 1 (2026-07-27): full 31-incident review, one real bug found and fixed
+
+The PI completed a full pass (all 31 incidents, not just a sample) using `pipeline/gold_standard_audit_tool.html`. Result: **zero content-accuracy errors** across every incident (no date/location/animal-type/harm-method/official-response field flagged wrong on any of the 31 rows) and **zero major issues**. Three notes, all about source *accessibility* rather than claim accuracy -- two confirmed the pipeline's own "unavailable" calls were correct (the Dutenews 405, a dead Fenghuang link), and one flagged a real problem worth investigating rather than taking at face value either way: the PI reported that `news.ycwb.com` (incident #27/seed #28's key source, previously marked `availability_status='unknown'`) was "actually accessible" when checked manually.
+
+That third note turned out to be correct, and tracing *why* the pipeline had it wrong was worth doing properly rather than just re-flipping a flag:
+
+- The site's WAF (`server: ESA`, Alibaba Cloud CDN) returns `x-tengine-error: denied by http_custom` and sets `acw_tc`/`cdn_sec_tc` anti-bot cookies for a bare User-Agent-only request -- a gzip-compressed denial response, not the anti-bot JS challenge page originally diagnosed for this source back in Stage 1's first pass. (Both are real anti-bot mechanisms; this session just hadn't hit this particular one before.)
+- Adding `Accept`, `Accept-Language`, and `Referer` headers -- standard headers any real browser sends, not any form of the captcha/login/proxy-pool circumvention PRD §11.3 prohibits -- got a clean 200 with the real 23KB article and correct title.
+- Re-tested Dutenews with the same fuller headers to make sure this wasn't a blanket "add headers, everything passes now" false comfort: still a genuine 405 (title literally `405`), confirming that failure is real and unrelated.
+
+`archive_sources.py` now sends the fuller header set by default, and gained a `--retry-failed` flag to re-attempt every source currently marked non-`available` (not just untried ones) -- used to re-check all previously-failed sources across the full dataset after this fix, not just the one incident the audit happened to flag. Result: 1 of 4 previously-failed sources recovered (`news.ycwb.com`); the other 3 (Dutenews 405, the dead Fenghuang link, a Baidu Baike 403 block) remain genuinely unavailable.
+
+**Cascading the fix through the pipeline** (incident #27 only -- no other incident's sources changed):
+- Stage 2: now 2 available sources instead of 1 → a real similarity comparison ran (0.39, correctly stays `unknown`, not `dependent`) → `independent_source_cluster_count` 1 → 2.
+- Stage 3: the recovered article explicitly states the date ("2月25日"), so `date_status`'s earlier downgrade to `claimed_only` (made when this source looked unrecoverable) is reverted to `metadata_supported`; a new claim captures a traffic officer's general regulatory explanation quoted in the recovered text (kept separate from `official_response_found`, since it's generic commentary, not a response to this specific incident).
+- Stage 4: score 41 (`A1`) → **57 (`A2`)**, now publishable. This is a third distinct value for this incident's score across this project (50 with the original bug counting a phantom source → 41 after correctly excluding a source that turned out to be wrongly marked unavailable → 57 now that it's correctly included) -- each transition was a real, traceable correction, not noise.
+
+The other two audit notes didn't require pipeline changes (both confirmed existing `unavailable` calls were right), but one is a legitimate tool UX suggestion worth carrying into a future revision: hide sources with no extracted text from the audit view by default, since there's nothing to actually audit there, rather than showing an empty "not archived" placeholder that just adds noise to review.
+
+**Current status: 22 `A4`, 2 `AX`, 2 `A2`, 4 `A1`, 1 `AF`, 0 `A3`. Publishable: 6/31.**

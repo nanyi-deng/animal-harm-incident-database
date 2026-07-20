@@ -90,11 +90,13 @@ INCIDENT_CORRECTIONS = {
     "AHID-CN-2026-0020": {  # seed #21, Chongqing "Sam's Club bagging guy"
         "estimated_animal_count": "3+ survivors, multiple additional deaths/missing",
     },
-    "AHID-CN-2026-0027": {  # seed #28, highway abandonment -- the source that actually stated
-        # the specific date (羊城晚报) failed to archive (anti-bot block); the surviving 网易
-        # source corroborates the event but doesn't restate the exact date in what was extracted.
-        # Downgrading date_status accordingly rather than keeping unwarranted confidence.
-        "date_status": "claimed_only",
+    # AHID-CN-2026-0027's date_status downgrade is REVERTED as of the 2026-07-27 gold-standard
+    # audit: the 羊城晚报 source that states the date explicitly ("2月25日") was originally
+    # marked unavailable because of a header-sensitivity false negative in Stage 1 (see
+    # archive_sources.py's header fix), not a real block. Re-fetched successfully, confirms
+    # the date directly. date_status reverts to metadata_supported below.
+    "AHID-CN-2026-0027": {
+        "date_status": "metadata_supported",
     },
     # --- Round 3 (2026-07-27): no incident-field corrections needed this round --
     # the only nuance (Nanning bank case, #33/AHID-CN-2026-0030) is handled entirely
@@ -426,14 +428,21 @@ CLAIMS = {
                            "伤害的记录", "supported", 2, 2, 0, "high"),
     ],
     "AHID-CN-2026-0027": [  # 乐山-重庆高速62具宠物尸体 -- 无单一施害人，HRL-014 性质
-        ("event_occurred", "一男子驾车沿乐山至重庆约300公里高速路段，累计发现62具猫狗尸体，其中约七八只为犬，"
-                          "其余多为猫；部分犬只穿着衣物、毛发整洁，推测系家养宠物", "supported", 1, 1, 0, "high"),
-        ("event_location", "四川乐山至重庆高速沿线（跨川渝两地，无法归入单一省市）", "supported", 1, 1, 0, "high"),
+        # 2026-07-27 gold-standard 审计后更新：羊城晚报来源经 header 修复后成功归档（原判定
+        # 为不可用系 Stage 1 请求头误判，非真实反爬拦截），现有 2 条独立来源，均明确写出日期
+        ("event_occurred", "一男子（吴先生）驾车沿乐山至重庆约300公里高速路段，累计发现62具猫狗尸体，其中约"
+                          "七八只为犬，其余多为猫；部分犬只穿着衣物、毛发整洁，推测系家养宠物",
+         "supported", 2, 2, 0, "high"),
+        ("event_date", "2026-02-25", "supported", 2, 2, 0, "high"),
+        ("event_location", "四川乐山至重庆高速沿线（跨川渝两地，无法归入单一省市）", "supported", 2, 2, 0, "high"),
         ("harm_method", "报道推测系春节返乡途中因运输防护不足导致宠物死亡或被沿途遗弃，非单一施害人的蓄意"
                         "行为；报道同时提及湖北嘉鱼至武汉高速段另有两只犬只因车窗未关跳车被撞死的类似个案",
-         "claimed_only", 1, 1, 0, "medium"),
-        ("official_response", "报道中未见交通或农业农村部门就本次乐山-重庆事件发布对应调查或处理通报",
-         "unknown", 1, 1, 0, "low"),
+         "claimed_only", 2, 2, 0, "medium"),
+        ("official_response", "一名参与高速管理工作的交警向记者说明：《道路交通安全法实施条例》仅允许车内后备箱"
+                              "或车顶行李架载货，严禁车外悬挂物品，若笼具脱落引发事故车主需担责；此为一般性规定"
+                              "说明，并非针对本次乐山-重庆事件的专项调查或处理通报", "supported", 1, 1, 0, "medium"),
+        ("official_response", "报道中未见交通或农业农村部门就本次乐山-重庆事件本身发布对应调查或处理通报",
+         "unknown", 2, 2, 0, "low"),
     ],
     # --- Round 3 (2026-07-27, HRL-017) ---
     "AHID-CN-2026-0028": [  # 北京"9·14"宠物中毒案，张某华 -- 两来源在动物构成上矛盾
