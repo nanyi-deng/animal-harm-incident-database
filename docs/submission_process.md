@@ -12,7 +12,11 @@
 
 ## 实际流程
 
-1. **提交**：任何人通过 GitHub Issue 表单提交（`.github/ISSUE_TEMPLATE/incident_submission.yml`），必填一条来源 URL 和简述，表单本身有一条"确认未写出未成年人身份信息"的强制勾选项。
+1. **提交**（两个渠道，进入同一条流水线）：
+   - **网站表单（主入口，面向普通用户）**：`/submit/` 页面（`site/src/pages/submit.astro`），零注册、零 GitHub 知识要求。提交经 Vercel serverless 函数（`site/api/submit.js`）校验（必填字段、URL 格式、蜜罐、频率限制、Cloudflare Turnstile 人机验证）后，自动创建带 `incident-submission` 标签的 GitHub issue——正文格式与 GitHub 模板渠道完全一致（已用测试验证两渠道解析结果逐字段相同）。部署步骤见 `site/DEPLOY.md`（需用户账号操作）。架构决策与成本核算见 `docs/prd/submission_ui_prd_draft.md`（HRL-022）。
+   - **GitHub Issue 表单（备用，面向懂技术的协作者）**：`.github/ISSUE_TEMPLATE/incident_submission.yml`，字段相同。
+
+   两个渠道都有"确认未写出未成年人身份信息"的强制确认项；网页渠道并明确提示提交内容将公开、请勿留个人联系方式。
 2. **agent 预筛**（`pipeline/screen_submissions.py`）：拉取所有带 `incident-submission` 标签的开放 issue，对每条提交做**纯机械性检查**——链接是否可以打开、页面是否疑似失效/反爬拦截页、URL 是否与已收录来源完全重复。**不判断内容是否属实、是否达到收录标准**——这两件事都是人来做的。结果追加写入 `docs/pipeline/submitted_candidates_pending_review.md`，格式跟现有 `candidate_incidents_seed.md` 一致，方便直接比对审核。
 3. **人工审核**：PI（或未来的项目协作者，视分工另行确定）按 `release/ahid-cn-dataset-v0.1/documentation/inclusion_exclusion_criteria.md` 的标准逐条判断，结论写回 `submitted_candidates_pending_review.md`，通过的移入 `candidate_incidents_seed.md` 并进入正常的 Stage 0-5 流水线；不通过的在 GitHub issue 下回复理由并关闭。
 4. **提交者不会自动收到"已收录"通知**——现阶段没有自动回复机制（没有配置 GitHub token），审核结论目前需要人工回到 issue 下评论。这个手动步骤未来可以脚本化，但现在没做，避免为了自动化而自动化。

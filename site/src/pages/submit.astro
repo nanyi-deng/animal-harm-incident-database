@@ -1,0 +1,155 @@
+---
+import Layout from '../layouts/Layout.astro';
+
+// Set in the Vercel project's env at build time; when absent (e.g. local dev
+// before Cloudflare setup) the widget simply doesn't render and the API falls
+// back to honeypot + rate limiting only -- degraded, not broken.
+const TURNSTILE_SITE_KEY = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY || '';
+---
+<Layout title="提交线索" description="向 AHID 提交一条动物伤害事件线索">
+  <div class="wrap">
+    <h1 style="margin-top: 40px;">提交事件线索</h1>
+
+    <div class="disclaimer">
+      <strong>提交前请了解：</strong>
+      提交不会自动进入数据库——每条线索先经过自动预筛（链接是否有效、是否重复），再由项目
+      维护者按<a href="/methodology/">公开的收录标准</a>人工审核决定是否收录。
+      提交内容会以工单形式<strong>公开</strong>记录在项目的 GitHub 仓库中，请勿填写你不希望公开的信息，
+      也<strong>请勿留下你自己的联系方式或个人信息</strong>。
+    </div>
+
+    <form id="submit-form" style="margin-top: 24px;">
+      <div class="form-field">
+        <label for="source_url">事件公开报道链接 <span class="req">*</span></label>
+        <p class="hint">至少一条能直接打开、内容确实描述该事件的公开来源（新闻报道、政府/警方通报、法院文书等）</p>
+        <input type="url" id="source_url" name="source_url" required placeholder="https://..." />
+      </div>
+
+      <div class="form-field">
+        <label for="additional_urls">其他相关链接（可选）</label>
+        <p class="hint">如有多条独立来源，每行一条或用逗号分隔——独立来源越多，越有助于审核</p>
+        <textarea id="additional_urls" name="additional_urls" rows="2" placeholder="https://..."></textarea>
+      </div>
+
+      <div class="form-field">
+        <label for="summary">事件简述 <span class="req">*</span></label>
+        <p class="hint">一两句话说明发生了什么，不需要写全文——审核时会直接阅读链接里的报道原文</p>
+        <textarea id="summary" name="summary" rows="4" required minlength="10" maxlength="2000"
+          placeholder="例：某地某年某月，XX机构/人员对动物实施了XX行为，官方是否已回应"></textarea>
+      </div>
+
+      <div class="form-field">
+        <label for="animal_category">动物类型</label>
+        <select id="animal_category" name="animal_category">
+          <option value="">（不确定可不选）</option>
+          <option>犬</option>
+          <option>猫</option>
+          <option>其他伴侣动物</option>
+          <option>家畜/经济动物</option>
+          <option>野生动物</option>
+          <option>圈养野生动物（动物园/海洋馆等）</option>
+          <option>多种</option>
+          <option>其他</option>
+        </select>
+      </div>
+
+      <!-- Honeypot: hidden from humans; bots that fill every field reveal themselves.
+           aria-hidden + tabindex=-1 keeps it out of screen readers and tab order. -->
+      <div class="hp-field" aria-hidden="true">
+        <label for="website">Website</label>
+        <input type="text" id="website" name="website" tabindex="-1" autocomplete="off" />
+      </div>
+
+      <div class="form-field checkbox-field">
+        <label>
+          <input type="checkbox" id="minor_confirm" name="minor_confirm" required />
+          我确认没有在任何字段里写出可能识别未成年人身份的信息（姓名、学校班级、住址等）。
+          即使涉事者是未成年人且你知道其身份，也请不要写——AHID 永远不记录未成年人的身份。<span class="req">*</span>
+        </label>
+      </div>
+
+      {TURNSTILE_SITE_KEY && (
+        <div class="form-field">
+          <div class="cf-turnstile" data-sitekey={TURNSTILE_SITE_KEY}></div>
+        </div>
+      )}
+
+      <button type="submit" id="submit-btn">提交线索</button>
+      <p id="form-status" role="status" style="min-height: 1.5em; margin-top: 12px;"></p>
+    </form>
+
+    <p style="color: var(--text-muted); font-size: 0.85rem; margin: 32px 0 48px;">
+      熟悉 GitHub 的用户也可以直接
+      <a href="https://github.com/nanyi-deng/animal-harm-incident-database/issues/new?template=incident_submission.yml">通过 issue 表单提交</a>，
+      两个渠道进入同一套审核流程。
+    </p>
+  </div>
+</Layout>
+
+{TURNSTILE_SITE_KEY && (
+  <script is:inline src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+)}
+
+<script>
+  const form = document.getElementById('submit-form') as HTMLFormElement;
+  const btn = document.getElementById('submit-btn') as HTMLButtonElement;
+  const statusEl = document.getElementById('form-status') as HTMLElement;
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    btn.disabled = true;
+    statusEl.textContent = '提交中…';
+
+    const data = Object.fromEntries(new FormData(form).entries());
+
+    try {
+      const resp = await fetch('/api/submit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+      const result = await resp.json().catch(() => ({}));
+      if (resp.ok) {
+        form.reset();
+        statusEl.textContent = '已收到，谢谢。线索将进入人工审核流程；是否收录以公开的收录标准为准。';
+      } else {
+        statusEl.textContent = `提交失败：${result.error || `HTTP ${resp.status}`}`;
+        btn.disabled = false;
+      }
+    } catch {
+      statusEl.textContent = '提交失败：网络错误，请稍后重试。';
+      btn.disabled = false;
+    }
+  });
+</script>
+
+<style>
+  .form-field { margin-bottom: 20px; }
+  .form-field label { display: block; font-weight: 600; margin-bottom: 2px; }
+  .hint { color: var(--text-muted); font-size: 0.85rem; margin: 0 0 6px; }
+  .req { color: var(--status-ax); }
+  input[type='url'], input[type='text'], textarea, select {
+    width: 100%;
+    padding: 8px 10px;
+    font: inherit;
+    color: var(--text);
+    background: var(--bg-raised);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+  }
+  textarea { resize: vertical; }
+  .checkbox-field label { display: flex; gap: 8px; align-items: flex-start; font-weight: 400; }
+  .checkbox-field input { margin-top: 4px; }
+  .hp-field { position: absolute; left: -9999px; height: 0; overflow: hidden; }
+  #submit-btn {
+    font: inherit;
+    font-weight: 600;
+    padding: 10px 24px;
+    color: var(--bg);
+    background: var(--accent);
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+  }
+  #submit-btn:disabled { opacity: 0.5; cursor: default; }
+</style>
