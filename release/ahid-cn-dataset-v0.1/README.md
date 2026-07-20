@@ -3,12 +3,10 @@
 This directory is a **local staging build** of the first versioned AHID-CN
 dataset package. It is assembled here for review and is **not** the
 Zenodo release — no DOI has been minted, and the data has not been made
-public. Publication is gated on three open items tracked in
-`docs/human_review_log.md`: HRL-005 (license terms not yet finalized),
-HRL-008 (a privacy QA signoff has not yet been run against this specific
-snapshot), and HRL-009 (no Zenodo/ORCID account exists yet to publish
-under). `LICENSE_DATA.txt` in this package is a placeholder for that
-reason — do not treat it as binding.
+public. License (HRL-005) and privacy QA signoff (HRL-008) are both
+decided as of 2026-07-27 — `LICENSE_DATA.txt` is the real text, not a
+placeholder. The one remaining gate is HRL-009: no Zenodo account has
+been created yet, so nothing has actually been uploaded or published.
 
 ## What's in this snapshot
 
