@@ -1,0 +1,24 @@
+# Data that must never be committed
+data/raw/
+data/media/
+data/internal/
+*.sqlite
+*.db
+
+# Secrets
+.env
+.env.*
+credentials*.json
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+
+# Node / Astro (future website)
+node_modules/
+dist/
+.astro/
+
+# OS
+.DS_Store

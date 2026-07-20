@@ -1,0 +1,76 @@
+table,field,type,allowed_values,description_zh,description_en,notes
+incidents_public,incident_id,string,,"事件唯一标识，格式 AHID-CN-YYYY-NNNN；不编码地理信息","Unique incident ID, format AHID-CN-YYYY-NNNN; encodes no geography","ID 终身稳定，地理归属可被更正"
+incidents_public,first_detected_at,date,,"系统首次发现该事件线索的日期","Date the system first detected the incident",
+incidents_public,last_updated_at,date,,"事件记录最后更新日期","Date of last record update",
+incidents_public,event_date_start,date,,"声称的事件开始日期","Claimed event start date","可为空"
+incidents_public,event_date_end,date,,"声称的事件结束日期","Claimed event end date","可为空"
+incidents_public,date_precision,enum,"day|month|quarter|year|unknown","事件日期精度","Precision of the event date",
+incidents_public,date_status,enum,"metadata_supported|officially_reported|multiple_sources_supported|claimed_only|unknown|contradicted","日期核验状态（PRD §19.1）","Date verification status (PRD §19.1)",
+incidents_public,province,string,,"省级行政区（GB/T 2260 名称）","Province-level region","可为空"
+incidents_public,city,string,,"市级行政区","City-level region","公开数据最细到区县，不含精确地址"
+incidents_public,location_precision,enum,"district|city|province|unknown","公开地点精度","Public location precision","公开层无 exact 级"
+incidents_public,location_status,enum,"exact_location_supported|district_supported|city_supported|province_supported|claimed_only|unknown|contradicted","地点核验状态（PRD §19.2）","Location verification status (PRD §19.2)",
+incidents_public,animal_category,enum,"dog|cat|other_companion|livestock|wildlife|captive_wildlife|multiple|other|unknown","动物大类","Animal category",
+incidents_public,species,string,,"物种（可得时）","Species when identifiable","可为空"
+incidents_public,estimated_animal_count,string,,"估计动物数量，整数或区间（如 3 或 1-5）","Estimated animal count, integer or range",
+incidents_public,juvenile_animal,enum,"yes|no|unknown","是否涉及幼年动物","Juvenile animal involved",
+incidents_public,injury_status,enum,"injured|uninjured|unknown","动物受伤状态","Injury status",
+incidents_public,mortality_status,enum,"dead|alive|partial|unknown","动物死亡状态；partial 指部分死亡","Mortality status; partial = some died",
+incidents_public,rescue_status,enum,"rescued|not_rescued|partial|unknown","救助状态","Rescue status",
+incidents_public,harm_categories,multi-enum,"beating|burning|scalding|stabbing|poisoning|suffocation|throwing_or_falling|dismemberment|starvation|abandonment|forced_fighting|content_motivated_abuse|inhumane_capture|inhumane_transport|inhumane_killing|medical_neglect|other_harm","伤害行为分类，竖线分隔多值（PRD §9.1）","Harm categories, pipe-separated (PRD §9.1)",
+incidents_public,minor_involvement,enum,"yes|no|unknown","是否涉及未成年人","Minor involvement","yes 时全库不含任何身份字段"
+incidents_public,institutional_involvement,enum,"yes|no|unknown","是否涉及机构（学校、收容所、企业等）","Institutional involvement",
+incidents_public,commercial_involvement,enum,"yes|no|unknown","是否涉及商业活动","Commercial involvement",
+incidents_public,group_involvement,enum,"yes|no|unknown","是否为多人参与","Group involvement",
+incidents_public,content_creation_involvement,enum,"yes|no|unknown","是否为拍摄内容/流量目的","Content-creation motivated",
+incidents_public,official_response_found,boolean,,"是否发现官方回应","Official response found","true 时必须存在对应 responses_public 记录"
+incidents_public,police_response_found,boolean,,"是否发现警方回应","Police response found","同上"
+incidents_public,school_response_found,boolean,,"是否发现学校回应","School response found","同上"
+incidents_public,ngo_response_found,boolean,,"是否发现 NGO 回应","NGO response found","同上"
+incidents_public,rescue_response_found,boolean,,"是否发现动物救援行动","Animal rescue response found","同上"
+incidents_public,legal_outcome_found,boolean,,"是否发现法律处理结果","Legal outcome found","同上"
+incidents_public,policy_response_found,boolean,,"是否发现政策层面回应","Policy response found","同上"
+incidents_public,automation_status,enum,"A1|A2|A3|A4|AX|AF","自动状态（PRD §21）；A0 不公开","Automation status (PRD §21); A0 never published","由规则条件判定，非分数推导"
+incidents_public,evidence_sufficiency_score,integer,"0-100","证据充分度分数（PRD §20）","Evidence sufficiency score (PRD §20)","衡量公开证据充分度，非真实性概率"
+incidents_public,score_version,string,,"计算该分数所用权重版本","Scoring weights version used","v0 权重未经校准"
+incidents_public,ruleset_version,string,,"发布规则引擎版本","Publication ruleset version",
+incidents_public,model_version,string,,"字段提取所用模型版本","Extraction model version",
+incidents_public,independent_source_cluster_count,integer,,"独立来源簇数量","Count of independent source clusters","按 C4 保守规则计算"
+incidents_public,official_source_count,integer,,"权威来源数量（Tier 1）","Count of Tier-1 official sources",
+incidents_public,contradiction_count,integer,,"实质性反证数量","Count of substantive contradictions",
+incidents_public,disputed_flag,boolean,,"是否处于争议状态（AX）","Disputed (AX) flag",
+incidents_public,misattribution_flag,boolean,,"是否被判定错误归属（AF）","Misattribution (AF) flag","AF 记录保留为纠错页，不删除"
+sources_public,source_id,string,,"来源唯一标识","Unique source ID",
+sources_public,incident_id,string,,"所属事件 ID","Parent incident ID",
+sources_public,source_type,enum,"government|court|police|news|ngo|social_post|blog|petition|other","来源类型","Source type",
+sources_public,source_tier,enum,"1|2|3|4","来源等级（PRD §11.1）：1 权威 2 专业具名 3 第一手公众 4 二次传播","Source tier (PRD §11.1)","等级只影响证据分值，不决定真假"
+sources_public,platform,string,,"平台标识（weibo、douyin、news_site、gov_site 等）","Platform identifier",
+sources_public,source_name,string,,"机构或账号公开名称","Public name of outlet or account","普通个人账号名可脱敏"
+sources_public,original_url,url,,"原始 URL（规范化后）","Canonicalized original URL",
+sources_public,archived_url,url,,"存档 URL","Archive URL","可为空"
+sources_public,publication_date,date,,"来源发布日期","Publication date",
+sources_public,first_collected_at,date,,"系统首次抓取日期","First collected date",
+sources_public,language,enum,"zh-Hans|zh-Hant|en|ja|ko|es|other","来源语言","Source language",
+sources_public,primary_source_status,enum,"primary|near_primary|secondary|unknown","是否第一手来源","Primary-source status",
+sources_public,independence_status,enum,"independent|dependent|unknown","来源独立性（C4 三值保守判定）","Source independence (three-valued, conservative)","禁止二值判定"
+sources_public,independent_cluster_id,string,,"所属独立来源簇 ID","Independent source cluster ID","同簇来源共享一个证据簇"
+sources_public,cites_source_id,string,,"引用的上游来源 ID（依赖图边）","Upstream source cited (dependency edge)","可为空"
+sources_public,availability_status,enum,"available|removed|private|modified|unknown","来源当前可访问状态","Current availability","删除不等于内容虚假"
+claims_public,claim_id,string,,"主张唯一标识","Unique claim ID",
+claims_public,incident_id,string,,"所属事件 ID","Parent incident ID",
+claims_public,claim_type,enum,"event_occurred|event_date|event_location|animal_species|animal_count|harm_method|animal_death|minor_involvement|institutional_involvement|official_response|rescue_outcome|legal_outcome|policy_response","主张类型（PRD §18.1）","Claim type (PRD §18.1)",
+claims_public,claim_value,string,,"主张内容值","Claim value",
+claims_public,support_status,enum,"supported|partially_supported|claimed_only|contradicted|unknown","支持状态","Support status",
+claims_public,supporting_source_count,integer,,"支持来源总数","Supporting source count","含相互依赖来源"
+claims_public,independent_supporting_count,integer,,"独立支持来源簇数","Independent supporting cluster count","区别于总数——转发不算独立佐证"
+claims_public,contradicting_source_count,integer,,"反证来源数","Contradicting source count","反证不得隐藏"
+claims_public,confidence_category,enum,"high|medium|low","提取置信档位","Extraction confidence category",
+responses_public,response_id,string,,"回应记录唯一标识","Unique response ID",
+responses_public,incident_id,string,,"所属事件 ID","Parent incident ID",
+responses_public,responder_type,enum,"government|police|court|school|company|ngo|rescue_group|platform|other","回应主体类型","Responder type",
+responses_public,responder_name_public,string,,"回应主体公开名称（仅机构名）","Public responder name (institutions only)","不含个人姓名"
+responses_public,response_type,enum,"statement|investigation|filing|penalty|rescue|policy|denial|other","回应类型","Response type",
+responses_public,response_date,date,,"回应日期","Response date",
+responses_public,source_id,string,,"记录该回应的来源 ID","Source documenting this response","每条回应必须可追溯至来源"
+responses_public,summary_zh,string,,"模板化中文摘要","Templated Chinese summary",
+responses_public,summary_en,string,,"模板化英文摘要","Templated English summary",
