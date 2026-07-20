@@ -3,6 +3,7 @@ data/raw/
 data/media/
 data/internal/
 *.sqlite
+*.sqlite3
 *.db
 
 # Secrets
