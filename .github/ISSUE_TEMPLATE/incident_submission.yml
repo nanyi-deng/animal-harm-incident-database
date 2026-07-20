@@ -1,0 +1,57 @@
+name: 提交事件线索 / Submit an incident lead
+description: 提交一个可能符合 AHID 收录标准的动物伤害事件线索。提交本身不会自动进入数据库——每条线索都会先经过自动预筛（检查链接是否有效、是否重复），再由项目负责人人工审核决定是否收录，跟现有全部 31 条收录事件走的是同一套人工审核流程。
+title: "[线索] "
+labels: ["incident-submission"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        感谢你愿意提供线索。请注意：
+        - **这不是一个自动发布的表单**——提交后不会立刻出现在数据库或网站上。
+        - AI 会先做基础核查（链接能不能打开、是不是已经收录过的重复事件），核查结果会作为一条评论回到这个 issue 下面。
+        - 是否最终收录，由项目负责人本人判断，标准见 [收录/排除标准](../../release/ahid-cn-dataset-v0.1/documentation/inclusion_exclusion_criteria.md)。
+        - 如果线索涉及未成年人，请不要在提交内容里写出任何可能识别身份的信息（姓名、学校班级、住址等）——即使你知道，也请不要写，AHID 的政策是永远不记录未成年施害者的身份。
+  - type: input
+    id: source_url
+    attributes:
+      label: 事件公开报道链接（必填）
+      description: 至少一条能直接打开、内容确实描述该事件的公开来源 URL（新闻报道、政府/警方通报、法院文书等）
+      placeholder: "https://..."
+    validations:
+      required: true
+  - type: input
+    id: additional_urls
+    attributes:
+      label: 其他相关链接（可选）
+      description: 如果有多条独立来源，用逗号分隔粘贴多个 URL——独立来源越多，越有助于加快审核
+      placeholder: "https://..., https://..."
+  - type: textarea
+    id: summary
+    attributes:
+      label: 事件简述（必填）
+      description: 用一两句话描述发生了什么——不需要写全文，AI 会自己去读链接里的正文
+      placeholder: "例：某地某年某月，XX机构/XX人员对动物实施了XX行为，官方是否已回应"
+    validations:
+      required: true
+  - type: dropdown
+    id: animal_category
+    attributes:
+      label: 动物类型
+      options:
+        - 犬
+        - 猫
+        - 其他伴侣动物
+        - 家畜/经济动物
+        - 野生动物
+        - 圈养野生动物（动物园/海洋馆等）
+        - 多种
+        - 其他/不确定
+    validations:
+      required: false
+  - type: checkboxes
+    id: minor_check
+    attributes:
+      label: 未成年人相关确认
+      options:
+        - label: 我确认没有在上方任何字段里写出可能识别未成年人身份的信息（如涉及未成年人）
+          required: true
