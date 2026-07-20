@@ -1,0 +1,163 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import incidents from '../../data/incidents.json';
+import {
+  STATUS_LABEL, STATUS_BLURB, HARM_LABEL, CLAIM_TYPE_LABEL,
+  SUPPORT_STATUS_LABEL, SOURCE_TIER_LABEL, isPublishable, locationLabel,
+} from '../../lib/labels.js';
+
+export function getStaticPaths() {
+  return incidents.map((incident) => ({
+    params: { id: incident.incident_id },
+    props: { incident },
+  }));
+}
+
+const { incident } = Astro.props;
+const claims = incident.claims || [];
+const sources = incident.sources || [];
+const supported = claims.filter((c) => c.support_status === 'supported');
+const partial = claims.filter((c) => c.support_status === 'partially_supported');
+const contradicted = claims.filter((c) => c.support_status === 'contradicted');
+const claimedOnly = claims.filter((c) => c.support_status === 'claimed_only');
+const unknownClaims = claims.filter((c) => c.support_status === 'unknown');
+const publishable = isPublishable(incident);
+---
+<Layout title={incident.incident_id} description={`AHID 事件页面：${incident.incident_id}`}>
+  <div class="wrap">
+    <p style="margin-top: 32px;"><a href="/incidents/">← 返回事件列表</a></p>
+
+    <div class="meta-row" style="margin: 12px 0;">
+      <span class={`badge badge-${incident.automation_status}`}>{STATUS_LABEL[incident.automation_status]}</span>
+      <span class="badge-outline">证据充分度 {incident.evidence_sufficiency_score ?? '—'}/100</span>
+      <span class="badge-outline">{publishable ? '达到发布门槛' : '未达发布门槛（内部记录）'}</span>
+    </div>
+    <h1 style="margin-bottom: 4px;">{incident.incident_id}</h1>
+    <p style="color: var(--text-muted);">{locationLabel(incident)} · {incident.event_date_start || '日期未确定'}</p>
+
+    <div class="disclaimer">
+      <strong>{STATUS_LABEL[incident.automation_status]}</strong> — {STATUS_BLURB[incident.automation_status]}
+      本页面由自动化系统生成（规则引擎，非语言模型决定发布），评分权重版本 {incident.score_version || '未标注'}，
+      规则版本 {incident.ruleset_version || '未标注'}。
+    </div>
+
+    {incident.disputed_flag === 1 && (
+      <div class="disclaimer" style="border-color: var(--status-ax);">
+        <strong>争议提示</strong> — 可靠来源之间对本事件的核心事实存在重大冲突，以下分别列出支持信息与反证，不作单一结论。
+      </div>
+    )}
+    {incident.misattribution_flag === 1 && (
+      <div class="disclaimer" style="border-color: var(--status-af);">
+        <strong>纠错记录</strong> — 经核实，相关指控被证实为虚假或错误归属。本页面保留作为纠错记录，用于防止同一错误信息再次传播，不代表真实发生过对应的动物伤害事件。
+      </div>
+    )}
+
+    <section style="margin-top: 32px;">
+      <div class="section-label">基本信息</div>
+      <table class="claims-table">
+        <tbody>
+          <tr><th>动物类型</th><td>{incident.animal_category}{incident.species ? ` · ${incident.species}` : ''}</td></tr>
+          <tr><th>估计数量</th><td>{incident.estimated_animal_count || '未知'}</td></tr>
+          <tr><th>伤害方式</th><td>{incident.harm_categories ? incident.harm_categories.split('|').map((h) => HARM_LABEL[h] || h).join('、') : '不适用（见上方说明）'}</td></tr>
+          <tr><th>死亡情况</th><td>{incident.mortality_status || '未知'}</td></tr>
+          <tr><th>未成年人涉入</th><td>{incident.minor_involvement}</td></tr>
+          <tr><th>机构涉入</th><td>{incident.institutional_involvement}</td></tr>
+          <tr><th>日期核验状态</th><td>{incident.date_status}</td></tr>
+          <tr><th>地点核验状态</th><td>{incident.location_status || '未标注'}</td></tr>
+          <tr><th>独立来源簇数量</th><td>{incident.independent_source_cluster_count ?? '未计算'}</td></tr>
+          <tr><th>权威来源数量</th><td>{incident.official_source_count ?? 0}</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section style="margin-top: 32px;">
+      <div class="section-label">机构回应</div>
+      <p>
+        {[
+          incident.official_response_found === 1 && '官方回应',
+          incident.police_response_found === 1 && '警方回应',
+          incident.school_response_found === 1 && '学校/机构回应',
+          incident.ngo_response_found === 1 && '动保组织介入',
+          incident.rescue_response_found === 1 && '救助/安置行动',
+          incident.legal_outcome_found === 1 && '法律处理结果',
+          incident.policy_response_found === 1 && '政策/后续回应',
+        ].filter(Boolean).join('、') || '未见任何机构回应记录'}
+      </p>
+    </section>
+
+    {supported.length > 0 && (
+      <section style="margin-top: 32px;">
+        <div class="section-label">公开来源支持的事实</div>
+        <table class="claims-table">
+          <thead><tr><th>类型</th><th>内容</th><th>支持来源</th><th>置信度</th></tr></thead>
+          <tbody>
+            {supported.map((c) => (
+              <tr><td>{CLAIM_TYPE_LABEL[c.claim_type] || c.claim_type}</td><td>{c.claim_value}</td>
+                <td>{c.supporting_source_count}（{c.independent_supporting_count} 独立簇）</td>
+                <td>{c.confidence_category}</td></tr>
+            ))}
+          </tbody>
+        </table>
+      </section>
+    )}
+
+    {partial.length > 0 && (
+      <section style="margin-top: 32px;">
+        <div class="section-label">部分支持的信息</div>
+        <table class="claims-table">
+          <thead><tr><th>类型</th><th>内容</th><th>置信度</th></tr></thead>
+          <tbody>
+            {partial.map((c) => (
+              <tr><td>{CLAIM_TYPE_LABEL[c.claim_type] || c.claim_type}</td><td>{c.claim_value}</td><td>{c.confidence_category}</td></tr>
+            ))}
+          </tbody>
+        </table>
+      </section>
+    )}
+
+    {contradicted.length > 0 && (
+      <section style="margin-top: 32px;">
+        <div class="section-label">存在矛盾的信息（反证不隐藏）</div>
+        <table class="claims-table">
+          <thead><tr><th>类型</th><th>内容</th></tr></thead>
+          <tbody>
+            {contradicted.map((c) => (
+              <tr class="claim-contradicted"><td>{CLAIM_TYPE_LABEL[c.claim_type] || c.claim_type}</td><td>{c.claim_value}</td></tr>
+            ))}
+          </tbody>
+        </table>
+      </section>
+    )}
+
+    {(claimedOnly.length > 0 || unknownClaims.length > 0) && (
+      <section style="margin-top: 32px;">
+        <div class="section-label">仍未确认的信息</div>
+        <ul>
+          {[...claimedOnly, ...unknownClaims].map((c) => (
+            <li>{CLAIM_TYPE_LABEL[c.claim_type] || c.claim_type}：{c.claim_value}（{SUPPORT_STATUS_LABEL[c.support_status]}）</li>
+          ))}
+        </ul>
+      </section>
+    )}
+
+    <section style="margin-top: 32px;">
+      <div class="section-label">来源（仅展示可访问、已归档的来源）</div>
+      <ul class="source-list">
+        {sources.map((s) => (
+          <li>
+            <div class="meta-row">
+              <span class="badge-outline">{SOURCE_TIER_LABEL[s.source_tier] || s.source_tier}</span>
+              <span class="badge-outline">{s.independence_status === 'dependent' ? '与其他来源同源' : '独立性未确认'}</span>
+              {s.language && s.language !== 'zh-Hans' && <span class="badge-outline">{s.language}</span>}
+            </div>
+            <a href={s.original_url} target="_blank" rel="noopener noreferrer">{s.source_name}</a>
+            {s.publication_date && <span style="color: var(--text-muted);"> · {s.publication_date}</span>}
+          </li>
+        ))}
+      </ul>
+      <p style="color: var(--text-muted); font-size: 0.85rem;">
+        媒体文件（如有）仅存于内部受限存储，公开层不重新分发第三方媒体内容。
+      </p>
+    </section>
+  </div>
+</Layout>

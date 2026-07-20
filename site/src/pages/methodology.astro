@@ -1,0 +1,81 @@
+---
+import Layout from '../layouts/Layout.astro';
+import incidents from '../data/incidents.json';
+
+const scoreVersions = [...new Set(incidents.map((i) => i.score_version).filter(Boolean))];
+const rulesetVersions = [...new Set(incidents.map((i) => i.ruleset_version).filter(Boolean))];
+---
+<Layout title="方法与数据" description="AHID 的数据字典、评分方法、已知偏差与版本信息。">
+  <div class="wrap">
+    <h1 style="margin: 40px 0 16px;">方法与数据</h1>
+
+    <section>
+      <h2>本页面由自动化系统生成</h2>
+      <p>
+        事件的自动状态（A1–A4/AX/AF）由规则条件判定（独立来源簇数量、权威来源有无、重大反证有无），
+        证据充分度分数只决定该状态对应页面是否达到公开门槛——两套体系不互相推导。发布决策由规则引擎
+        （而非语言模型）执行。
+      </p>
+    </section>
+
+    <section>
+      <h2>状态定义</h2>
+      <table class="claims-table">
+        <thead><tr><th>状态</th><th>含义</th><th>发布门槛</th></tr></thead>
+        <tbody>
+          <tr><td>A1 自动收集</td><td>已保存公开来源，但核心信息不足</td><td>40 分</td></tr>
+          <tr><td>A2 机器关联</td><td>多个来源被归并为同一候选事件</td><td>55 分</td></tr>
+          <tr><td>A3 多方印证</td><td>多个独立来源支持核心事实，未见重大反证</td><td>70 分</td></tr>
+          <tr><td>A4 权威记录</td><td>存在官方/警方/法院/正式机构记录</td><td>85 分</td></tr>
+          <tr><td>AX 存在争议</td><td>可靠来源之间存在重大矛盾</td><td>不适用</td></tr>
+          <tr><td>AF 错误归属</td><td>确认为虚假或错误归属，保留为纠错记录</td><td>不适用</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section>
+      <h2>证据充分度评分（0–100，8 个维度）</h2>
+      <ul>
+        <li>原始来源（0–15）· 媒体保存（0–10）· 时间支持（0–15）· 地点支持（0–15）</li>
+        <li>独立来源（0–20，权重最高）· 权威记录（0–15）· 动物后续（0–5）· 一致性（0–5）</li>
+      </ul>
+      <p style="color: var(--text-muted);">
+        独立来源维度不直接采用原始来源簇数量：只有被系统实际证明存在依赖关系（引用链、近似重复文本）的
+        来源才合并计为一簇并获得满额权重；无法证明依赖但也未确认独立的来源，按权重折半计分。
+        系统从不自动判定来源"独立"——这一判断保留给人工 gold-standard 审计。
+      </p>
+    </section>
+
+    <section>
+      <h2>已知偏差</h2>
+      <p style="color: var(--text-muted);">
+        数据库记录的是公开可观察信息，<strong>不代表真实发生率</strong>，不应用于地区或群体排名。
+        已知偏差包括：报道偏差（曝光多不等于发生多）、地区偏差（网络活跃地区被过度收录）、
+        平台偏差（无法访问的平台造成样本缺失）、语言偏差、内容偏差（极端事件更易传播）、
+        删除偏差（快速删除的内容更难核验）、模型偏差，以及本轮研究版试点特有的
+        <strong>发现方式偏差</strong>（Tier D URL 驱动回填，依赖创始人已知线索，覆盖面系统性小于
+        未来自动发现阶段）。
+      </p>
+    </section>
+
+    <section>
+      <h2>去身份化与隐私</h2>
+      <p style="color: var(--text-muted);">
+        未成年人身份信息在任何情况下均自动隐藏，无例外。成年人姓名的记录方式跟随一手/官方信源本身
+        已使用的识别程度——信源本身匿名化处理的，本数据库不主动深挖补全真名；信源本身使用实名的
+        （如官方通报本身径称当事人姓名），本数据库沿用该识别程度，不额外加严。
+      </p>
+    </section>
+
+    <section>
+      <h2>版本信息</h2>
+      <ul>
+        <li>数据集事件数：{incidents.length}（含 1 条 AF 纠错记录，不含内部测试用例）</li>
+        <li>评分权重版本：{scoreVersions.join(', ') || '未标注'}（v0，未经校准）</li>
+        <li>规则引擎版本：{rulesetVersions.join(', ') || '未标注'}</li>
+        <li>抽取方式：AI 辅助人工阅读归档正文抽取（非部署模型自动抽取），<code>model_version</code> 字段留空</li>
+      </ul>
+      <p><a href="https://github.com/nanyi-deng/animal-harm-incident-database/blob/main/docs/data_dictionary.csv">完整数据字典（GitHub）</a></p>
+    </section>
+  </div>
+</Layout>

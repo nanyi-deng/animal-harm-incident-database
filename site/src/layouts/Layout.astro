@@ -1,0 +1,45 @@
+---
+import '../styles/global.css';
+
+const { title, description } = Astro.props;
+const fullTitle = title ? `${title} · AHID` : 'AHID — 动物伤害事件数据库';
+---
+<!doctype html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>{fullTitle}</title>
+  {description && <meta name="description" content={description} />}
+  <meta name="robots" content="noindex, nofollow" />
+  <!-- noindex intentional: this build is a local/internal preview, not deployed
+       publicly yet. Remove once HRL-002 (family risk assessment, hosting
+       decision) is resolved and the site is actually published. -->
+</head>
+<body>
+  <header class="site-header">
+    <div class="wrap-wide">
+      <a class="site-title" href="/">
+        AHID
+        <small>动物伤害事件数据库 · Animal Harm Incident Database</small>
+      </a>
+      <nav class="site-nav">
+        <a href="/incidents/">事件</a>
+        <a href="/methodology/">方法与数据</a>
+      </nav>
+    </div>
+  </header>
+  <main>
+    <slot />
+  </main>
+  <footer class="site-footer">
+    <div class="wrap-wide">
+      <p>
+        本网站使用自动化工具收集、保存、归并和分析公开互联网信息。事件页面反映系统在指定时间找到的公开来源及其相互关系，
+        不构成司法认定、独立调查结论或对任何个人的定罪。系统可能出现遗漏、误归并或来源偏差。
+      </p>
+      <p>预览构建 · 未公开部署 · <a href="https://github.com/nanyi-deng/animal-harm-incident-database">GitHub</a></p>
+    </div>
+  </footer>
+</body>
+</html>

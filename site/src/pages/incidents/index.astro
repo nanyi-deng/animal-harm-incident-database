@@ -1,0 +1,74 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import incidents from '../../data/incidents.json';
+import { STATUS_LABEL, locationLabel } from '../../lib/labels.js';
+
+const sorted = [...incidents].sort((a, b) => (b.event_date_start || '').localeCompare(a.event_date_start || ''));
+const provinces = [...new Set(incidents.map((i) => i.province).filter(Boolean))].sort();
+const categories = [...new Set(incidents.map((i) => i.animal_category).filter(Boolean))].sort();
+const statuses = [...new Set(incidents.map((i) => i.automation_status).filter(Boolean))];
+---
+<Layout title="事件列表" description="AHID 已收录事件列表，可按省份、动物类型、自动状态筛选。">
+  <div class="wrap-wide">
+    <h1 style="margin: 40px 0 4px;">事件列表</h1>
+    <p style="color: var(--text-muted);">共 {incidents.length} 条已归并事件。筛选与排序为客户端脚本，不发送任何请求。</p>
+
+    <div class="filters">
+      <select id="f-province"><option value="">全部省份</option>
+        {provinces.map((p) => <option value={p}>{p}</option>)}
+      </select>
+      <select id="f-category"><option value="">全部动物类型</option>
+        {categories.map((c) => <option value={c}>{c}</option>)}
+      </select>
+      <select id="f-status"><option value="">全部状态</option>
+        {statuses.map((s) => <option value={s}>{STATUS_LABEL[s] || s}</option>)}
+      </select>
+      <select id="f-minor"><option value="">未成年人涉入：不限</option>
+        <option value="yes">涉及未成年人</option>
+        <option value="no">不涉及未成年人</option>
+      </select>
+    </div>
+
+    <div id="list">
+      {sorted.map((i) => (
+        <a class="incident-list-item" data-province={i.province || ''} data-category={i.animal_category || ''}
+           data-status={i.automation_status || ''} data-minor={i.minor_involvement || ''}
+           href={`/incidents/${i.incident_id}/`}>
+          <div class="meta-row">
+            <span class={`badge badge-${i.automation_status}`}>{STATUS_LABEL[i.automation_status]}</span>
+            <span class="badge-outline">{locationLabel(i)}</span>
+            <span class="badge-outline">{i.event_date_start || '日期未确定'}</span>
+            {i.disputed_flag === 1 && <span class="badge-outline" style="color: var(--status-ax);">存在争议</span>}
+          </div>
+          <div class="summary">
+            {i.incident_id} · {i.animal_category} · {(i.harm_categories || '（AF：无真实伤害，见页面说明）').split('|').join('、')}
+            · 证据充分度 {i.evidence_sufficiency_score ?? '—'}/100
+          </div>
+        </a>
+      ))}
+    </div>
+  </div>
+
+  <script>
+    const provinceSel = document.getElementById('f-province');
+    const categorySel = document.getElementById('f-category');
+    const statusSel = document.getElementById('f-status');
+    const minorSel = document.getElementById('f-minor');
+    const items = Array.from(document.querySelectorAll('#list > a'));
+
+    function applyFilters() {
+      const province = provinceSel.value, category = categorySel.value, status = statusSel.value, minor = minorSel.value;
+      for (const el of items) {
+        const show =
+          (!province || el.dataset.province === province) &&
+          (!category || el.dataset.category === category) &&
+          (!status || el.dataset.status === status) &&
+          (!minor || el.dataset.minor === minor);
+        el.style.display = show ? '' : 'none';
+      }
+    }
+    for (const sel of [provinceSel, categorySel, statusSel, minorSel]) {
+      sel.addEventListener('change', applyFilters);
+    }
+  </script>
+</Layout>

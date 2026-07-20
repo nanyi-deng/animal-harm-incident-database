@@ -1,0 +1,65 @@
+---
+import Layout from '../layouts/Layout.astro';
+import incidents from '../data/incidents.json';
+import { STATUS_LABEL, isPublishable, locationLabel } from '../lib/labels.js';
+
+const publishable = incidents.filter(isPublishable);
+const latest = [...publishable]
+  .sort((a, b) => (b.event_date_start || '').localeCompare(a.event_date_start || ''))
+  .slice(0, 6);
+
+const provinces = new Set(incidents.map((i) => i.province).filter(Boolean));
+const withOfficialResponse = incidents.filter((i) => i.official_response_found === 1).length;
+const disputedOrAF = incidents.filter((i) => ['AX', 'AF'].includes(i.automation_status)).length;
+---
+<Layout title="首页" description="动物伤害事件数据库（AHID）——自动化、多语言、以公开来源为基础的事件监测系统。">
+  <div class="wrap">
+    <section style="padding: 48px 0 8px;">
+      <h1 style="font-size: 2.1rem; margin-bottom: 12px;">动物伤害事件数据库</h1>
+      <p style="font-size: 1.08rem; color: var(--text-muted); max-width: 60ch;">
+        AHID 持续发现、保存、去重、归并并交叉核验中国大陆动物伤害相关的公开互联网信息，
+        透明展示来源、证据充分度、冲突与机构回应。首期语料 AHID-CN。
+      </p>
+    </section>
+
+    <div class="disclaimer">
+      <strong>关于本站</strong> — 本网站使用自动化工具收集、保存、归并和分析公开互联网信息。
+      事件页面反映系统在指定时间找到的公开来源及其相互关系，<strong>不构成司法认定、独立调查结论
+      或对任何个人的定罪</strong>。系统可能出现遗漏、误归并、翻译错误或来源偏差。
+      涉及未成年人和普通个人的身份信息原则上不会公开。数据库记录公开可观察信息，
+      <strong>不代表真实发生率</strong>，也不应直接用于地区或群体排名。
+    </div>
+
+    <div class="stat-row">
+      <div class="stat"><span class="n">{incidents.length}</span><span class="label">已归并事件（含未达发布门槛）</span></div>
+      <div class="stat"><span class="n">{publishable.length}</span><span class="label">达到发布门槛</span></div>
+      <div class="stat"><span class="n">{provinces.size}</span><span class="label">涉及省级行政区</span></div>
+      <div class="stat"><span class="n">{withOfficialResponse}</span><span class="label">有官方/机构回应记录</span></div>
+    </div>
+
+    <section style="margin-top: 40px;">
+      <div class="section-label">最新达到发布门槛的事件</div>
+      {latest.map((i) => (
+        <a class="incident-list-item" href={`/incidents/${i.incident_id}/`}>
+          <div class="meta-row">
+            <span class={`badge badge-${i.automation_status}`}>{STATUS_LABEL[i.automation_status]}</span>
+            <span class="badge-outline">{locationLabel(i)}</span>
+            <span class="badge-outline">{i.event_date_start || '日期未确定'}</span>
+          </div>
+          <div class="summary">{i.incident_id} · {i.animal_category} · {(i.harm_categories || '').split('|').join('、')}</div>
+        </a>
+      ))}
+      <p><a href="/incidents/">查看全部 {incidents.length} 条事件 →</a></p>
+    </section>
+
+    <section style="margin-top: 40px;">
+      <div class="section-label">已知偏差</div>
+      <p style="color: var(--text-muted); font-size: 0.94rem;">
+        本轮数据为研究版试点（Tier D，URL 驱动回填，非自动发现），事件覆盖面取决于创始人已知的线索，
+        系统性小于未来自动发现阶段。互联网曝光多不等于真实发生多；网络活跃地区可能被过度收录；
+        {disputedOrAF} 条事件被标记为存在争议或错误归属，详见各事件页面与
+        <a href="/methodology/">方法与数据</a>页。
+      </p>
+    </section>
+  </div>
+</Layout>
