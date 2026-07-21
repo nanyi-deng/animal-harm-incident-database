@@ -104,6 +104,45 @@ def main() -> None:
               f"用户审核时的选择，建议确认是否要落到确定类别：{borderline}")
         print()
 
+    # 近重复对最终数据的影响（信息性，非阻塞）：CAIL2018 test/train 分片间同案重复，
+    # 设计上保留双方不合并（附元数据区分），但有效唯一案件数因此 < 名义行数——论文须如实报告。
+    pairs_path = Path(__file__).parent / "census_dedup_pairs.json"
+    if pairs_path.exists():
+        import json
+        from collections import Counter, defaultdict
+        pairs = json.load(open(pairs_path))
+        final_set = set(ids)
+        cat_of = {r["census_id"]: r["category"] for r in rows}
+        adj: dict = defaultdict(set)
+        nodes: set = set()
+        cross = []  # 同案不同终判
+        for p in pairs:
+            a, b = p["r1_id"], p["r2_id"]
+            if a in final_set and b in final_set:
+                adj[a].add(b); adj[b].add(a); nodes |= {a, b}
+                if cat_of[a] != cat_of[b]:
+                    cross.append((p["similarity"], cat_of[a], cat_of[b], a, b))
+        seen: set = set(); clusters = 0; clustered = 0
+        for nd in nodes:
+            if nd in seen:
+                continue
+            clusters += 1; stack = [nd]
+            while stack:
+                x = stack.pop()
+                if x in seen:
+                    continue
+                seen.add(x); clustered += 1; stack.extend(adj[x] - seen)
+        redundant = clustered - clusters
+        print(f"  [i] 近重复影响：{len(rows)} 名义行 → 有效唯一案件约 "
+              f"{len(rows) - redundant} 条（{clustered} 行属 {clusters} 个同案簇，"
+              f"冗余 {redundant} 行为 CAIL 分片间重复，设计上保留不合并）")
+        if cross:
+            print(f"  [!] {len(cross)} 对同案近重复的终判分类不一致（同一案件两个标签，"
+                  f"建议确认是否需要统一）：")
+            for sim, ca, cb, a, b in cross:
+                print(f"        sim={sim}  {ca} vs {cb}  ({a[-16:]} / {b[-16:]})")
+        print()
+
     if errors:
         print(f"✗ 校验失败：{len(errors)} 处问题")
         for e in errors:
