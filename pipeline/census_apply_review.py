@@ -17,6 +17,29 @@ with open(csv_input, encoding='utf-8-sig') as f:
     for row in csv.DictReader(f):
         user_review[row['census_id']] = row
 
+# 证据透明标记是分类语境相关的：偷狗/产业链语境 vs 蓄意虐待语境。
+# apply_corrections 在它当时赋予的分类下打标记，但用户人工审核（或后续 round2
+# 规则）可能把分类改到别处——那时旧标记就与终判分类矛盾，必须清除，否则会出现
+# "retaliation 行带 animal_directly_harmed=false（偷狗语境标记）"这类自相矛盾的行。
+POACHING_CONTEXT_FLAGS = ('outcome_documented', 'recovered_after_theft', 'animal_directly_harmed')
+CRUELTY_CONTEXT_FLAGS = ('claim_verified', 'perpetrator_confirmed')
+
+
+def normalize_metadata(rec):
+    """把证据标记与 correction_note 对齐到终判分类 category_final。"""
+    cat = rec['category_final']
+    if cat != 'poaching':
+        for f in POACHING_CONTEXT_FLAGS:
+            rec.pop(f, None)
+    if cat != 'cruelty':
+        for f in CRUELTY_CONTEXT_FLAGS:
+            rec.pop(f, None)
+    # 若人工终判覆盖了 apply_corrections 赋予的分类(rec['category'])，那条自动生成
+    # 的 correction_note 描述的是已被推翻的中间分类，与终判矛盾——替换为如实说明。
+    if rec.get('correction_note') and cat != rec['category']:
+        rec['correction_note'] = '人工审核终判：以人工分类为准，自动推定/修正分类已被覆盖'
+
+
 # 合并与筛选
 final = []
 for r in classified.values():
@@ -34,6 +57,8 @@ for r in classified.values():
         r['category_final'] = r['category'] if r['category'] != 'fp' else 'fp'
         r['included'] = r['category'] != 'fp'
         r['review_notes'] = '[auto-included]'
+
+    normalize_metadata(r)
 
     # 仅保留 included=true 的
     if r['included']:
