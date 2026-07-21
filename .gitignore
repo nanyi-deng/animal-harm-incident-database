@@ -28,3 +28,10 @@ dist/
 # OS
 .DS_Store
 pipeline/cail_census_raw_hits.jsonl
+pipeline/census_class/
+pipeline/census_classified.jsonl
+pipeline/census_dedup_pairs.json
+pipeline/census_review_items.json
+pipeline/census_review_result.csv
+pipeline/census_final.jsonl
+pipeline/census_review_tool.html
