@@ -1,9 +1,9 @@
 ---
 import Layout from '../layouts/Layout.astro';
 
-// Set in the Vercel project's env at build time; when absent (e.g. local dev
-// before Cloudflare setup) the widget simply doesn't render and the API falls
-// back to honeypot + rate limiting only -- degraded, not broken.
+// Set in the Cloudflare Pages project's env at build time; when absent (e.g.
+// local dev before Turnstile setup) the widget simply doesn't render and the
+// API falls back to honeypot + rate limiting only -- degraded, not broken.
 const TURNSTILE_SITE_KEY = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY || '';
 ---
 <Layout title="提交线索" description="向 AHID 提交一条动物伤害事件线索">
