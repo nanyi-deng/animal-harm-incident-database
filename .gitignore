@@ -27,3 +27,4 @@ dist/
 
 # OS
 .DS_Store
+pipeline/cail_census_raw_hits.jsonl
