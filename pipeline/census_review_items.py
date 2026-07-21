@@ -2,6 +2,11 @@
 import json, random
 from collections import Counter
 
+# 固定随机种子：审核集抽样必须可复现，否则"我们审了一个随机样本"这句话在论文里
+# 不可核查（重跑得到不同样本）。注意：本项目实际发布的 v0.2 审核集是在加此种子
+# 之前抽取的，其确切构成以 census_audit_set_ids.txt 冻结记录为准（见 protocol §10）。
+random.seed(20260721)
+
 recs = [json.loads(l) for l in open('pipeline/census_classified.jsonl') if l.strip()]
 
 # 筛选审核集
