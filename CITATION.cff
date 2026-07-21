@@ -1,5 +1,5 @@
 cff-version: 1.2.0
-message: "This repository is pre-release. A citable versioned dataset (ahid-cn-dataset-v0.1) with a Zenodo DOI is planned for October 2026; until then, please cite this repository."
+message: "To cite the dataset, use its Zenodo DOI: 10.5281/zenodo.21462312 (AHID-CN Dataset v0.1). This file describes the software/repository itself."
 title: "AHID: Animal Harm Incident Database"
 type: software
 version: "0.0.1-dev"
