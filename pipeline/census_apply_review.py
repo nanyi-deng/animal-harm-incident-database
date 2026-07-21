@@ -48,6 +48,19 @@ with open('pipeline/census_final.jsonl', 'w') as f:
 
 print(f"✓ 最终纳入 {len(final)}/754 条判决")
 
+
+# 证据类型透明标记（census_apply_corrections.py 生成）——只在非默认情形写入，
+# 空值 = 标准情形/不适用。这些标记让方法论文能如实拆分"判决实证的伤害" vs
+# "产业链推定" vs "未经判决认定的声称"，而不是把三类混为一谈。
+def fmt_flag(r, key):
+    v = r.get(key)
+    if v is True:
+        return 'true'
+    if v is False:
+        return 'false'
+    return ''
+
+
 # 导出公开 CSV（带 UTF-8 BOM）
 csv_path = 'release/v0.2/judgments_census.csv'
 Path(csv_path).parent.mkdir(parents=True, exist_ok=True)
@@ -55,7 +68,9 @@ Path(csv_path).parent.mkdir(parents=True, exist_ok=True)
 with open(csv_path, 'w', encoding='utf-8-sig', newline='') as f:
     w = csv.DictWriter(f, fieldnames=[
         'census_id', 'cail_file', 'cail_idx', 'category', 'animal', 'death', 'n_animals',
-        'motive', 'summary', 'charges', 'fact', 'confidence', 'review_status'
+        'motive', 'summary', 'charges', 'fact', 'confidence', 'review_status',
+        'animal_directly_harmed', 'outcome_documented', 'recovered_after_theft',
+        'claim_verified', 'perpetrator_confirmed', 'correction_note'
     ])
     w.writeheader()
     for r in final:
@@ -72,7 +87,13 @@ with open(csv_path, 'w', encoding='utf-8-sig', newline='') as f:
             'charges': '|'.join(r.get('charges', [])),
             'fact': r.get('fact', ''),
             'confidence': r.get('confidence', ''),
-            'review_status': 'reviewed' if r['census_id'] in user_review else 'auto'
+            'review_status': 'reviewed' if r['census_id'] in user_review else 'auto',
+            'animal_directly_harmed': fmt_flag(r, 'animal_directly_harmed'),
+            'outcome_documented': fmt_flag(r, 'outcome_documented'),
+            'recovered_after_theft': fmt_flag(r, 'recovered_after_theft'),
+            'claim_verified': fmt_flag(r, 'claim_verified'),
+            'perpetrator_confirmed': fmt_flag(r, 'perpetrator_confirmed'),
+            'correction_note': r.get('correction_note', ''),
         })
 
 print(f"✓ 导出公开 CSV: {csv_path}")

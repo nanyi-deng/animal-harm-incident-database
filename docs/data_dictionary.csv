@@ -74,3 +74,22 @@ responses_public,response_date,date,,"回应日期","Response date",
 responses_public,source_id,string,,"记录该回应的来源 ID","Source documenting this response","每条回应必须可追溯至来源"
 responses_public,summary_zh,string,,"模板化中文摘要","Templated Chinese summary",
 responses_public,summary_en,string,,"模板化英文摘要","Templated English summary",
+judgments_census,census_id,string,,"判决唯一标识，格式 CAIL-{分片文件名}-{6位行索引}","Unique judgment ID, format CAIL-{shard}-{6-digit index}","独立扁平表，不并入 incidents_public 六表体系（PRD C14 未涉及；见 census_runbook.md）"
+judgments_census,cail_file,string,,"CAIL2018 源分片文件名","CAIL2018 source shard filename","溯源=数据集+记录索引，CAIL2018 无案号/法院/日期"
+judgments_census,cail_idx,integer,,"该判决在源分片中的行索引","Row index within the source shard",
+judgments_census,category,enum,"poaching|property_protection|other_true|cruelty|retaliation|borderline|fp","终判分类（人工审核后）","Final classification after human review","fp=假阳性，公开表已剔除；borderline 残留 1 条"
+judgments_census,animal,string,,"涉及动物（AI 抽取）","Animal involved (AI-extracted)","多为犬；可为空"
+judgments_census,death,boolean,"true|false","是否致死（AI 抽取，可为空）","Death outcome (AI-extracted, may be null)","空=判决未明确"
+judgments_census,n_animals,string,,"涉及动物数量（整数或描述）","Number of animals (integer or descriptive)","可为空"
+judgments_census,motive,string,,"作案动机（AI 抽取）","Motive (AI-extracted)","可为空"
+judgments_census,summary,string,,"案情摘要（AI 生成）","Case summary (AI-generated)",
+judgments_census,charges,string,,"罪名（CAIL2018 原始标注，竖线分隔）","Charges (CAIL2018 original labels, pipe-separated)","偷狗毒狗案多为盗窃/抢劫/生产销售有毒有害食品，非动物类罪名"
+judgments_census,fact,string,,"判决书事实认定部分全文（CAIL2018 原文，人名已遮蔽）","Full judgment fact statement (CAIL2018 verbatim, names masked)","官方公文，自带张某某式姓名遮蔽"
+judgments_census,confidence,enum,"high|low","AI 分类置信档","AI classification confidence tier",
+judgments_census,review_status,enum,"reviewed|auto","是否经人工审核","Human review status","reviewed=在 93 条审核集内经人工终判；auto=高置信非假阳性自动纳入"
+judgments_census,animal_directly_harmed,boolean,"false","证据透明标记。空=默认（动物是直接受害者或不适用）；false=偷狗现象案但动物本身未被证实受伤（受伤/死亡的是嫌疑人或围殴者）","Evidence-transparency flag. blank=default; false=dog-theft case where the animal itself was not shown to be harmed","用户通用原则：偷狗情节即计入 poaching，此标记拆分'偷狗现象总规模'与'动物真实受伤子集'"
+judgments_census,outcome_documented,boolean,"false","证据透明标记。空=判决记载了动物结局；false=产业链推定案，判决未明写动物最终结局但作案手段/动机与已确认案例一致","Evidence-transparency flag. blank=outcome documented; false=industry-pattern presumption, final animal outcome not stated in judgment","让论文能区分'判决实证的伤害'与'推定纳入'"
+judgments_census,recovered_after_theft,boolean,"true","证据透明标记。空=不适用；true=盗窃既遂后动物被追回","Evidence-transparency flag. blank=N/A; true=animal recovered after completed theft","追回不改变已发生的强行捕捉/搬运受害事实"
+judgments_census,claim_verified,boolean,"false","证据透明标记。空=不适用；false=下毒等指控未经判决认定为事实（采信声称本身计入分类）","Evidence-transparency flag. blank=N/A; false=poisoning-type allegation not established as fact by the court","如实区分'判决认定的事实'与'当事人的声称'"
+judgments_census,perpetrator_confirmed,boolean,"false","证据透明标记。空=不适用；false=动物伤害真实发生但加害人身份未坐实","Evidence-transparency flag. blank=N/A; false=harm real but perpetrator identity not established",
+judgments_census,correction_note,string,,"人工审核或推定规则的修正说明","Note on the human-review or presumption-rule correction","空=AI 原始分类未被修改；93 条有值"

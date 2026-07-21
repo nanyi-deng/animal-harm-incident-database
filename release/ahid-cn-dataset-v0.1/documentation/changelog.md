@@ -6,6 +6,72 @@ build decisions, rather than differences from a predecessor. Later versions add
 entries describing incidents added/removed, pipeline fixes, and any scoring-weight
 changes relative to the previous version. English first; 中文版见下半部分。
 
+## [v0.2] — Unreleased (draft) — adds the judgment census sub-corpus
+
+> Draft entry. The data is built and finalized; the release date and whether v0.2
+> also bundles other additions are not yet decided. Do not treat this as a
+> published record until it carries a DOI and date.
+
+### What v0.2 adds
+
+A new flat table, `judgments_census.csv` — 424 criminal-judgment cases involving
+animal harm, drawn from CAIL2018 (the "Law Research Cup" corpus of 2.68 million
+pre-2019 single-defendant Chinese criminal judgments, released by a body the
+Supreme People's Court's information center took part in). This is the project's
+first sub-corpus with an explicit sampling frame: anyone who downloads the same
+dataset and runs the same search reproduces the same candidate set, so the census
+carries a denominator the 30-incident curated collection cannot.
+
+The census stays a **separate flat table by design** — it does not join the
+six-table `incidents_public` schema, run the scoring engine, or generate claims
+(census_runbook.md; PRD C14 does not cover it). The public CSV **includes the full
+judgment fact text**, because these are official government documents (not
+copyright-bearing third-party media), CAIL2018 released them openly, and the
+corpus already carries "张某某"-style name masking consistent with the project's
+identity policy.
+
+### How the 424 were selected (PRISMA flow)
+
+Full-corpus search returned 754 raw candidates (layer A: four charge types ×
+animal terms × harm terms = 368; layer B: strong collocations like 偷狗/毒狗/毒镖
+regardless of charge = 386). All 754 were AI-classified; a difflib pass flagged 92
+near-duplicate pairs (retained, not merged, so the same real case can appear as
+both "confirmed theft with injury" and "alleged-theft investigation" with metadata
+distinguishing them). A 93-item audit set (borderline + low-confidence non-false-
+positive + QC samples) went through the project lead's browser review tool: 78
+included, 15 excluded, ~98% agreement with the AI's high-confidence labels. Final
+public table: 424 (78 reviewed-in + 346 high-confidence auto-included; 329 false
+positives excluded).
+
+### Evidence-transparency flags
+
+The CSV carries per-row flags so the methodology can report evidence strength
+honestly rather than presenting all 424 as court-proven harm: `outcome_documented`
+= false on 72 industry-pattern presumption cases (the judgment did not state the
+animal's fate but the method/motive matched confirmed cases), `claim_verified` =
+false on 5 unverified poisoning allegations, `animal_directly_harmed` = false on 4
+dog-theft cases where the animal itself was not shown to be harmed,
+`recovered_after_theft` and `perpetrator_confirmed` on 4 each. Most of the 424 are
+court-documented harm; the flags mark the minority that entered by presumption or
+unverified claim.
+
+### Notable finding
+
+The dog-theft-and-poisoning industry chain — the single largest category — is
+prosecuted entirely as property crime (theft, robbery, food-safety offenses),
+never as cruelty. In the absence of an anti-cruelty statute, intentional harm to
+animals enters the criminal record only when it collides with some other offense.
+The census is, in effect, an empirical portrait of the legislative gap.
+
+### CAIL2018 limitations (recorded honestly)
+
+No case number, court, or date (competition-corpus anonymization); coverage ends
+at 2018; single-defendant cases only (a CAIL2018 construction filter). Provenance
+is by dataset + record index rather than a court-website link; individual cases can
+be re-anchored to the original judgment via a distinctive fact-text string when
+needed. One methodological upside: CAIL2018 was frozen before the 2021 mass
+takedown of the judgment website, so it retains some judgments later removed.
+
 ## [v0.1.1] — 2026-07-20 — documentation correction, no data changes
 
 - **Corrected this changelog**: the copy published with v0.1 had been drafted
@@ -82,6 +148,32 @@ Database's licensing of its core collections); pipeline code: MIT.
 ---
 
 # 更新日志（中文）
+
+## [v0.2] — 未发布（草稿）— 新增判决书 census 子语料
+
+> 草稿条目。数据已构建并定稿；发布日期、以及 v0.2 是否同时打包其他新增内容尚未决定。在带上 DOI 与日期之前，不应视为已发布记录。
+
+### v0.2 新增内容
+
+新增扁平表 `judgments_census.csv`——424 条涉动物伤害的刑事判决案件，取自 CAIL2018（"法研杯"语料，268 万份 2018 年前单被告人中国刑事判决，由最高人民法院信息中心参与的机构发布）。这是本项目**首个有明确抽样框的子语料**：任何人下载同一数据集、跑同一检索式，都能复现同一候选集——它有 30 条便利样本所不具备的分母。
+
+census **有意保持为独立扁平表**——不并入 `incidents_public` 六表体系、不跑评分引擎、不生成 claim（见 census_runbook.md；PRD C14 未涉及）。公开 CSV **包含判决书事实认定全文**，因为这些是官方公文（不受版权保护的第三方媒体内容之外）、CAIL2018 已公开发布，且语料自带"张某某"式姓名遮蔽，与项目身份政策天然一致。
+
+### 424 条如何筛选（PRISMA 流水）
+
+全量检索得 754 条原始候选（A 层：4 案由×动物词×伤害词=368；B 层：偷狗/毒狗/毒镖等强搭配词、不限案由=386）。754 条全部经 AI 分类；difflib 比对标出 92 对近重复（保留、未合并，故同一真实案件可同时呈现为"确认盗窃致伤"与"疑似偷狗调查"两个侧面，以元数据区分）。一个 93 条审核集（borderline + 低置信非假阳性 + QC 抽样）经项目负责人的浏览器审核工具终判：78 纳入、15 排除，与 AI 高置信标注约 98% 一致。最终公开表：424 条（78 审核纳入 + 346 高置信自动纳入；剔除 329 条假阳性）。
+
+### 证据类型透明标记
+
+CSV 逐行携带标记，让方法论文能如实报告证据强度，而非把 424 条全部呈现为判决实锤的伤害：`outcome_documented`=false 见于 72 条产业链推定案（判决未明写动物结局，但作案手段/动机与已确认案例一致），`claim_verified`=false 见于 5 条未经认定的下毒指控，`animal_directly_harmed`=false 见于 4 条偷狗案（动物本身未被证实受伤），`recovered_after_theft` 与 `perpetrator_confirmed` 各 4 条。424 条中绝大多数是判决实证的伤害；这些标记标出以推定或未证实声称纳入的少数。
+
+### 关键发现
+
+偷狗毒狗产业链——最大的单一类别——完全以财产犯罪起诉（盗窃、抢劫、食品安全类罪名），从不以虐待罪起诉。在没有反虐待动物法的情况下，对动物的蓄意伤害只有在恰好触犯别的罪名时才会进入刑事记录。这份 census 实际上就是立法空白的实证画像。
+
+### CAIL2018 局限（如实记录）
+
+无案号、法院、日期（竞赛语料匿名化）；覆盖止于 2018 年；仅单被告人案件（CAIL2018 构建时的过滤）。溯源方式为数据集+记录索引而非文书网链接；需要时可用判决事实中的独特字串把个案回锚到原判决。一处方法学优点：CAIL2018 冻结于 2021 年文书网大规模下架之前，反而保留了部分后来被下架的判决。
 
 ## [v0.1.1] — 2026-07-20 — 文档更正，数据无变化
 
