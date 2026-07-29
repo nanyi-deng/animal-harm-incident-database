@@ -13,7 +13,7 @@ This scan does three things, all factual (no redaction -- redaction beyond
 the source's own masking is a policy call for the project lead, per protocol
 §8(b) "照抄文书原文的遮蔽程度"):
 
-  1. Masking prevalence: how many of the 424 rows carry any 某-mask at all.
+  1. Masking prevalence: how many rows carry any 某-mask at all.
   2. Unmasked full-name candidates: surname + 1-2 Han chars with NO 某 in or
      adjacent to the token, minus a place/org stopword list. These are the
      龚见兴-type residues -- the real risk. Over-flags by design; the output

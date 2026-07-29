@@ -14,7 +14,7 @@ changes relative to the previous version. English first; 中文版见下半部�
 
 ### What v0.2 adds
 
-A new flat table, `judgments_census.csv` — 424 criminal-judgment cases involving
+A new flat table, `judgments_census.csv` — 487 criminal-judgment cases involving
 animal harm, drawn from CAIL2018 (the "Law Research Cup" corpus of 2.68 million
 pre-2019 single-defendant Chinese criminal judgments, released by a body the
 Supreme People's Court's information center took part in). This is the project's
@@ -30,26 +30,46 @@ copyright-bearing third-party media), CAIL2018 released them openly, and the
 corpus already carries "张某某"-style name masking consistent with the project's
 identity policy.
 
-### How the 424 were selected (PRISMA flow)
+### How the 487 were selected (PRISMA flow, two review rounds)
 
 Full-corpus search returned 754 raw candidates (layer A: four charge types ×
 animal terms × harm terms = 368; layer B: strong collocations like 偷狗/毒狗/毒镖
 regardless of charge = 386). All 754 were AI-classified; a difflib pass flagged 92
 near-duplicate pairs (retained, not merged, so the same real case can appear as
 both "confirmed theft with injury" and "alleged-theft investigation" with metadata
-distinguishing them). A 93-item audit set (borderline + low-confidence non-false-
-positive + QC samples) went through the project lead's browser review tool: 78
-included, 15 excluded, ~98% agreement with the AI's high-confidence labels. Final
-public table: 424 (78 reviewed-in + 346 high-confidence auto-included; 329 false
-positives excluded).
+distinguishing them).
+
+Round one: a 93-item audit set (borderline + low-confidence non-false-positive +
+QC samples) went through the project lead's browser review tool — 78 included, 15
+excluded, ~98% agreement with the AI's high-confidence labels. This round included
+only 20 of the AI's 332 false-positive calls; 6 of those 20 (30%) turned out to be
+real cases, which raised the question of how many more were sitting unreviewed in
+the remaining false-positive pool. Round-one public table: 424.
+
+Round two (2026-07-22): a backward audit against the `/data-pipeline-prd`
+verification skill split the 332 AI-called false positives by which search layer
+had matched them. The 84 that matched layer B — meaning the judgment text
+literally contains 偷狗/毒狗/毒镖-class vocabulary, yet the AI still called the case
+not-real — carry the highest risk of the exact bias round one had already caught
+(the model applying a stricter "was the animal itself harmed" test than the
+project's "theft context counts" policy). All 84 have now been read by hand (7
+already covered in round one, 77 read fresh this round): 62 reclassified to
+poaching, 1 to retaliation, 14 confirmed as genuinely not real cases. Layer-B
+false-positive review coverage is now 100%. The 248 layer-A false positives (no
+strong theft/poisoning vocabulary present) remain mostly unreviewed — 236 of them
+have never been read by a person — and are treated as a separate, lower-priority
+open question (see `known_limitations.md` and protocol §10) since the specific
+bias mechanism found in layer B is less likely, though not verified absent, there.
+
+Final public table: 487 (424 from round one + 63 recovered in round two).
 
 ### Near-duplicate composition (effective N)
 
 CAIL2018 distributes the same judgment across its competition splits (train /
-test / valid), so the 424 rows are not 424 distinct cases. A difflib pass over
+test / valid), so the 487 rows are not 487 distinct cases. A difflib pass over
 `fact[:500]` flags 92 near-duplicate pairs (75 of them ≥0.95 similarity), all of
 which have both members in the published set; they collapse into 74 same-case
-clusters covering 156 rows. **Effective unique-case count is ~342, not 424** —
+clusters covering 156 rows. **Effective unique-case count is ~405, not 487** —
 82 rows are split-duplication. The design keeps both members rather than merging
 (retain-with-metadata: the same real case can carry `recovered_after_theft` vs
 `animal_directly_harmed` distinctions across its copies), but anyone computing
@@ -61,14 +81,16 @@ hide. Run `pipeline/census_validate.py` for the current numbers.
 ### Evidence-transparency flags
 
 The CSV carries per-row flags so the methodology can report evidence strength
-honestly rather than presenting all 424 as court-proven harm: `outcome_documented`
-= false on 72 industry-pattern presumption cases (the judgment did not state the
-animal's fate but the method/motive matched confirmed cases), `claim_verified` =
-false on 5 unverified poisoning allegations, `animal_directly_harmed` = false on 4
-dog-theft cases where the animal itself was not shown to be harmed,
-`recovered_after_theft` and `perpetrator_confirmed` on 4 each. Most of the 424 are
-court-documented harm; the flags mark the minority that entered by presumption or
-unverified claim.
+honestly rather than presenting all 487 as court-proven harm: `outcome_documented`
+= false on 62 industry-pattern presumption cases (the judgment did not state the
+animal's fate but the method/motive matched confirmed cases — this is almost
+entirely the round-two recovery, since a documented theft context with an
+undocumented animal outcome was exactly what round one's stricter AI pass had
+missed), `claim_verified` = false on 5 unverified poisoning allegations,
+`animal_directly_harmed` = false on 64 dog-theft cases where the animal itself was
+not shown to be harmed, `recovered_after_theft` and `perpetrator_confirmed` on 4
+each. Most of the 487 are court-documented harm; the flags mark the minority that
+entered by presumption or unverified claim.
 
 ### Notable finding
 
@@ -170,21 +192,27 @@ Database's licensing of its core collections); pipeline code: MIT.
 
 ### v0.2 新增内容
 
-新增扁平表 `judgments_census.csv`——424 条涉动物伤害的刑事判决案件，取自 CAIL2018（"法研杯"语料，268 万份 2018 年前单被告人中国刑事判决，由最高人民法院信息中心参与的机构发布）。这是本项目**首个有明确抽样框的子语料**：任何人下载同一数据集、跑同一检索式，都能复现同一候选集——它有 30 条便利样本所不具备的分母。
+新增扁平表 `judgments_census.csv`——487 条涉动物伤害的刑事判决案件，取自 CAIL2018（"法研杯"语料，268 万份 2018 年前单被告人中国刑事判决，由最高人民法院信息中心参与的机构发布）。这是本项目**首个有明确抽样框的子语料**：任何人下载同一数据集、跑同一检索式，都能复现同一候选集——它有 30 条便利样本所不具备的分母。
 
 census **有意保持为独立扁平表**——不并入 `incidents_public` 六表体系、不跑评分引擎、不生成 claim（见 census_runbook.md；PRD C14 未涉及）。公开 CSV **包含判决书事实认定全文**，因为这些是官方公文（不受版权保护的第三方媒体内容之外）、CAIL2018 已公开发布，且语料自带"张某某"式姓名遮蔽，与项目身份政策天然一致。
 
-### 424 条如何筛选（PRISMA 流水）
+### 487 条如何筛选（PRISMA 流水，两轮审核）
 
-全量检索得 754 条原始候选（A 层：4 案由×动物词×伤害词=368；B 层：偷狗/毒狗/毒镖等强搭配词、不限案由=386）。754 条全部经 AI 分类；difflib 比对标出 92 对近重复（保留、未合并，故同一真实案件可同时呈现为"确认盗窃致伤"与"疑似偷狗调查"两个侧面，以元数据区分）。一个 93 条审核集（borderline + 低置信非假阳性 + QC 抽样）经项目负责人的浏览器审核工具终判：78 纳入、15 排除，与 AI 高置信标注约 98% 一致。最终公开表：424 条（78 审核纳入 + 346 高置信自动纳入；剔除 329 条假阳性）。
+全量检索得 754 条原始候选（A 层：4 案由×动物词×伤害词=368；B 层：偷狗/毒狗/毒镖等强搭配词、不限案由=386）。754 条全部经 AI 分类；difflib 比对标出 92 对近重复（保留、未合并，故同一真实案件可同时呈现为"确认盗窃致伤"与"疑似偷狗调查"两个侧面，以元数据区分）。
+
+第一轮：93 条审核集（borderline + 低置信非假阳性 + QC 抽样）经项目负责人的浏览器审核工具终判——78 纳入、15 排除，与 AI 高置信标注约 98% 一致。这一轮只覆盖了 AI 的 332 条假阳性判定中的 20 条，其中 6 条（30%）其实是真实案件，这提出了一个问题：剩下没审核的假阳性里还有多少没被发现。第一轮公开表：424 条。
+
+第二轮（2026-07-22）：按 `/data-pipeline-prd` 验证方法论做回溯审计，把 332 条 AI 判假阳性按命中的检索层拆开看。其中 84 条命中 B 层——即判决原文里明确出现"偷狗/毒狗/毒镖"这类词汇，AI 却仍判定不是真实案件——这批风险最集中，因为它正好对应第一轮已经抓到过的偏差（模型用比项目"偷狗情节即计入"政策更严的标准去判断动物是否受害）。这 84 条现已全部人工读过（第一轮已覆盖 7 条，本轮新读 77 条）：62 条改判 poaching、1 条改判 retaliation、14 条确认原判无误。B 层假阳性审核覆盖率现已 100%。剩下 248 条 A 层假阳性（不含强偷狗/毒狗词汇）大部分仍未审核——236 条从未被人看过——作为一个独立、优先级较低的未决问题保留（见 `known_limitations.md` 与协议 §10），因为 B 层发现的那个具体偏差机制在 A 层大概率不适用，但尚未核实证明。
+
+最终公开表：487 条（第一轮 424 条 + 第二轮找回 63 条）。
 
 ### 近重复构成（有效 N）
 
-CAIL2018 把同一份判决分散在竞赛的 train/test/valid 各分片，所以 424 行并非 424 个不同案件。对 `fact[:500]` 做 difflib 比对标出 92 对近重复（其中 75 对相似度 ≥0.95），双方都在公开集内，折叠成 74 个同案簇、覆盖 156 行。**有效唯一案件数约 342，而非 424**——82 行是分片重复。设计上保留双方而非合并（附元数据区分：同一真实案件的不同副本可分别带 `recovered_after_theft` / `animal_directly_harmed` 等区分），但任何做计数的人必须先去重。其中 3 对同案近重复的终判标签甚至不一致（如一对文本完全相同却分别标 `other_true` / `retaliation`）——这是保留副本刻意暴露而非隐藏的标签噪声。当前数字见 `pipeline/census_validate.py`。
+CAIL2018 把同一份判决分散在竞赛的 train/test/valid 各分片，所以 487 行并非 487 个不同案件。对 `fact[:500]` 做 difflib 比对标出 92 对近重复（其中 75 对相似度 ≥0.95），双方都在公开集内，折叠成 74 个同案簇、覆盖 156 行。**有效唯一案件数约 405，而非 487**——82 行是分片重复。设计上保留双方而非合并（附元数据区分：同一真实案件的不同副本可分别带 `recovered_after_theft` / `animal_directly_harmed` 等区分），但任何做计数的人必须先去重。其中 3 对同案近重复的终判标签甚至不一致（如一对文本完全相同却分别标 `other_true` / `retaliation`）——这是保留副本刻意暴露而非隐藏的标签噪声。当前数字见 `pipeline/census_validate.py`。
 
 ### 证据类型透明标记
 
-CSV 逐行携带标记，让方法论文能如实报告证据强度，而非把 424 条全部呈现为判决实锤的伤害：`outcome_documented`=false 见于 72 条产业链推定案（判决未明写动物结局，但作案手段/动机与已确认案例一致），`claim_verified`=false 见于 5 条未经认定的下毒指控，`animal_directly_harmed`=false 见于 4 条偷狗案（动物本身未被证实受伤），`recovered_after_theft` 与 `perpetrator_confirmed` 各 4 条。424 条中绝大多数是判决实证的伤害；这些标记标出以推定或未证实声称纳入的少数。
+CSV 逐行携带标记，让方法论文能如实报告证据强度，而非把 487 条全部呈现为判决实锤的伤害：`outcome_documented`=false 见于 62 条产业链推定案（判决未明写动物结局，但作案手段/动机与已确认案例一致——这批几乎全部来自第二轮找回，因为"偷狗语境记录在案、动物结局未写"正是第一轮较严标准漏掉的类型），`claim_verified`=false 见于 5 条未经认定的下毒指控，`animal_directly_harmed`=false 见于 64 条偷狗案（动物本身未被证实受伤），`recovered_after_theft` 与 `perpetrator_confirmed` 各 4 条。487 条中绝大多数是判决实证的伤害；这些标记标出以推定或未证实声称纳入的少数。
 
 ### 关键发现
 

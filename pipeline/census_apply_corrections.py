@@ -92,6 +92,84 @@ POACHING_TO_FP_NO_ANIMAL = {
     'CAIL-cail_first_stage_train-00002-of-00004.parquet-285052',  # 纯人身纠纷(赔偿协商争执殴打),此条无动物受害描述
 }
 
+# --- 第三轮：HRL-026 定向重扫（2026-07-22）---
+# 回溯审计（/data-pipeline-prd）发现假阳性(fp)排除路径从未被系统核验：329条fp仅
+# 20条经93条QC样本抽查，其中6条(30%)被救回为真实案件。据此对剩余309条fp中命中
+# B层强搭配词（偷狗/毒狗/毒镖等，命中即代表原文含这些词、却仍被AI判fp）的77条
+# 做定向全量人工重读，非抽样。逐条判断结果：62条确认为真实偷狗案（嫌疑/未遂/
+# 既遂/持有作案工具/以此为敲诈借口等情形，按"偷狗情节即计入"政策归poaching）、
+# 1条为报复诬告者案（被诬陷偷狗后行凶报复，归retaliation）、14条核实后确认原
+# fp判断正确（如"毒狗"武器用于伤人非偷狗、"偷狗"为诬陷/巧合背景提及等，均非
+# 真实动物伤害情节）。14条真fp的具体理由见 docs/pipeline/census_privacy_qa.md
+# 姊妹文档 docs/pipeline/judgment_census_protocol.md §10 记录，此处不重复。
+RESCAN_FP_TO_POACHING_IDS = {
+    'CAIL-cail_exercise_contest_test-00000-of-00001.parquet-006794',
+    'CAIL-cail_exercise_contest_train-00000-of-00001.parquet-008248',
+    'CAIL-cail_exercise_contest_train-00000-of-00001.parquet-029565',
+    'CAIL-cail_exercise_contest_train-00000-of-00001.parquet-047457',
+    'CAIL-cail_exercise_contest_train-00000-of-00001.parquet-085837',
+    'CAIL-cail_exercise_contest_train-00000-of-00001.parquet-094245',
+    'CAIL-cail_first_stage_test-00000-of-00001.parquet-004649',
+    'CAIL-cail_first_stage_test-00000-of-00001.parquet-021509',
+    'CAIL-cail_first_stage_test-00000-of-00001.parquet-032397',
+    'CAIL-cail_first_stage_test-00000-of-00001.parquet-091524',
+    'CAIL-cail_first_stage_test-00000-of-00001.parquet-163942',
+    'CAIL-cail_first_stage_test-00000-of-00001.parquet-166366',
+    'CAIL-cail_first_stage_train-00000-of-00004.parquet-003938',
+    'CAIL-cail_first_stage_train-00000-of-00004.parquet-004551',
+    'CAIL-cail_first_stage_train-00000-of-00004.parquet-066368',
+    'CAIL-cail_first_stage_train-00000-of-00004.parquet-097063',
+    'CAIL-cail_first_stage_train-00000-of-00004.parquet-156066',
+    'CAIL-cail_first_stage_train-00000-of-00004.parquet-191678',
+    'CAIL-cail_first_stage_train-00000-of-00004.parquet-211254',
+    'CAIL-cail_first_stage_train-00000-of-00004.parquet-245794',
+    'CAIL-cail_first_stage_train-00000-of-00004.parquet-296744',
+    'CAIL-cail_first_stage_train-00000-of-00004.parquet-305323',
+    'CAIL-cail_first_stage_train-00000-of-00004.parquet-314125',
+    'CAIL-cail_first_stage_train-00000-of-00004.parquet-367595',
+    'CAIL-cail_first_stage_train-00000-of-00004.parquet-386949',
+    'CAIL-cail_first_stage_train-00000-of-00004.parquet-427315',
+    'CAIL-cail_first_stage_train-00001-of-00004.parquet-047189',
+    'CAIL-cail_first_stage_train-00001-of-00004.parquet-101292',
+    'CAIL-cail_first_stage_train-00001-of-00004.parquet-142925',
+    'CAIL-cail_first_stage_train-00001-of-00004.parquet-172646',
+    'CAIL-cail_first_stage_train-00001-of-00004.parquet-176231',
+    'CAIL-cail_first_stage_train-00001-of-00004.parquet-176704',
+    'CAIL-cail_first_stage_train-00001-of-00004.parquet-187711',
+    'CAIL-cail_first_stage_train-00001-of-00004.parquet-188694',
+    'CAIL-cail_first_stage_train-00001-of-00004.parquet-225973',
+    'CAIL-cail_first_stage_train-00001-of-00004.parquet-247775',
+    'CAIL-cail_first_stage_train-00001-of-00004.parquet-264041',
+    'CAIL-cail_first_stage_train-00001-of-00004.parquet-296011',
+    'CAIL-cail_first_stage_train-00001-of-00004.parquet-296492',
+    'CAIL-cail_first_stage_train-00001-of-00004.parquet-317435',
+    'CAIL-cail_first_stage_train-00001-of-00004.parquet-320845',
+    'CAIL-cail_first_stage_train-00001-of-00004.parquet-346695',
+    'CAIL-cail_first_stage_train-00001-of-00004.parquet-419552',
+    'CAIL-cail_first_stage_train-00002-of-00004.parquet-067602',
+    'CAIL-cail_first_stage_train-00002-of-00004.parquet-119788',
+    'CAIL-cail_first_stage_train-00002-of-00004.parquet-150406',
+    'CAIL-cail_first_stage_train-00002-of-00004.parquet-151223',
+    'CAIL-cail_first_stage_train-00002-of-00004.parquet-178128',
+    'CAIL-cail_first_stage_train-00002-of-00004.parquet-307950',
+    'CAIL-cail_first_stage_train-00002-of-00004.parquet-343413',
+    'CAIL-cail_first_stage_train-00002-of-00004.parquet-403378',
+    'CAIL-cail_first_stage_train-00003-of-00004.parquet-033431',
+    'CAIL-cail_first_stage_train-00003-of-00004.parquet-057602',
+    'CAIL-cail_first_stage_train-00003-of-00004.parquet-159306',
+    'CAIL-cail_first_stage_train-00003-of-00004.parquet-195657',
+    'CAIL-cail_first_stage_train-00003-of-00004.parquet-294387',
+    'CAIL-cail_first_stage_train-00003-of-00004.parquet-303787',
+    'CAIL-cail_first_stage_train-00003-of-00004.parquet-340605',
+    'CAIL-cail_first_stage_train-00003-of-00004.parquet-361360',
+    'CAIL-cail_valid.parquet-000740',
+    'CAIL-cail_valid.parquet-001070',
+    'CAIL-cail_valid.parquet-004852',
+}
+RESCAN_FP_TO_RETALIATION_IDS = {
+    'CAIL-cail_first_stage_train-00000-of-00004.parquet-079930',  # 洪某某被诬陷偷狗后持刀报复诬告者，核心是报复诬告非动物受害
+}
+
 recs = [json.loads(l) for l in open('pipeline/census_classified.jsonl') if l.strip()]
 
 presumed, marked_excluded, reclassified = [], [], []
@@ -178,6 +256,22 @@ for r in recs:
         r['correction_note'] = '原AI分类核实有误：本记录事实为纯人身纠纷(赔偿协商引发殴打)，无任何动物受害描述'
         round2.append((cid, 'fp'))
 
+# --- 第三轮：HRL-026 定向重扫修正（B层命中却被判fp的77条全量重读结果）---
+round3 = []
+for r in recs:
+    cid = r['census_id']
+
+    if cid in RESCAN_FP_TO_POACHING_IDS and r['category'] == 'fp':
+        r['category'] = 'poaching'
+        r['animal_directly_harmed'] = False
+        r['correction_note'] = 'HRL-026定向重扫：原判fp有误，判决记载真实偷狗情节(既遂/未遂/嫌疑/持有作案工具/敲诈借口)，按"偷狗情节即计入"政策归poaching；动物本身受伤情况未证实故animal_directly_harmed=False'
+        round3.append((cid, 'poaching'))
+
+    elif cid in RESCAN_FP_TO_RETALIATION_IDS and r['category'] == 'fp':
+        r['category'] = 'retaliation'
+        r['correction_note'] = 'HRL-026定向重扫：原判fp有误，本记录核心是行为人因被诬陷偷狗而报复诬告者，归retaliation'
+        round3.append((cid, 'retaliation'))
+
 with open('pipeline/census_classified.jsonl', 'w') as f:
     for r in recs:
         f.write(json.dumps(r, ensure_ascii=False) + '\n')
@@ -186,6 +280,7 @@ print(f"✓ 产业链推定升级为 poaching: {len(presumed)} 条")
 print(f"✓ 标记建议排除（追回未受伤，明确证据）: {len(marked_excluded)} 条 — {marked_excluded}")
 print(f"✓ 特殊性质重分类: {len(reclassified)} 条 — {reclassified}")
 print(f"✓ 第二轮人工审核修正: {len(round2)} 条 — {round2}")
+print(f"✓ 第三轮HRL-026定向重扫修正: {len(round3)} 条（62 poaching + 1 retaliation，14条核实后确认原fp正确未改）")
 
 from collections import Counter
 cat_cnt = Counter(r['category'] for r in recs)
