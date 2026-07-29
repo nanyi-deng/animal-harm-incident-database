@@ -1,6 +1,7 @@
 ---
 import Layout from '../layouts/Layout.astro';
 import incidents from '../data/incidents.json';
+import census from '../data/census.json';
 import { STATUS_LABEL, isPublishable, locationLabel } from '../lib/labels.js';
 
 const publishable = incidents.filter(isPublishable);
@@ -18,7 +19,9 @@ const disputedOrAF = incidents.filter((i) => ['AX', 'AF'].includes(i.automation_
       <h1 style="font-size: 2.1rem; margin-bottom: 12px;">动物伤害事件数据库</h1>
       <p style="font-size: 1.08rem; color: var(--text-muted); max-width: 60ch;">
         AHID 持续发现、保存、去重、归并并交叉核验中国大陆动物伤害相关的公开互联网信息，
-        透明展示来源、证据充分度、冲突与机构回应。首期语料 AHID-CN。
+        透明展示来源、证据充分度、冲突与机构回应。首期语料 AHID-CN，由两个互补的子语料构成：
+        依赖公开报道的<a href="/incidents/">事件库</a>（覆盖面广，但无法复现的样本框），
+        与有明确抽样框的<a href="/census/">判决书 census</a>（可复现，但只覆盖进入司法程序的案件）。
       </p>
     </section>
 
@@ -50,6 +53,16 @@ const disputedOrAF = incidents.filter((i) => ['AX', 'AF'].includes(i.automation_
         </a>
       ))}
       <p><a href="/incidents/">查看全部 {incidents.length} 条事件 →</a></p>
+    </section>
+
+    <section style="margin-top: 40px;">
+      <div class="section-label">判决书 census（另一个子语料）</div>
+      <p style="color: var(--text-muted); font-size: 0.94rem; max-width: 60ch;">
+        {census.length} 条涉动物伤害的刑事判决，全量检索自 CAIL2018（有明确抽样框、可复现）。
+        与上方事件库依赖公开报道不同，这批数据只覆盖进入司法程序的案件——
+        最大的单一发现：偷狗毒狗产业链几乎全部以盗窃、抢劫等财产罪起诉，极少以虐待罪论处。
+      </p>
+      <p><a href="/census/">查看全部 {census.length} 条判决 →</a></p>
     </section>
 
     <section style="margin-top: 40px;">

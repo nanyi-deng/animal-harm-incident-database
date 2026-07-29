@@ -59,3 +59,22 @@ export function isPublishable(incident) {
 export function locationLabel(incident) {
   return [incident.province, incident.city].filter(Boolean).join(' · ') || '地点跨区域/未确定';
 }
+
+// Judgment census category labels -- a different taxonomy from harm_categories
+// above, because the census classifies judgments by why the animal was harmed
+// (or nearly was), not by physical harm method. See methodology.md §13.
+export const CENSUS_CATEGORY_LABEL = {
+  poaching: '偷狗/偷猎',
+  property_protection: '护田护院投毒',
+  cruelty: '蓄意虐待',
+  retaliation: '报复泄愤',
+  other_true: '其他真实伤害',
+};
+
+export const CENSUS_CATEGORY_BLURB = {
+  poaching: '判决记载偷狗/偷猎情节（既遂、未遂或有力嫌疑）。多数以盗窃、抢劫或食品安全类罪名起诉，而非动物类罪名。',
+  property_protection: '为防止野生动物啃食农作物或看家护院而投毒，致邻居饲养的牲畜或宠物中毒死亡。与蓄意虐待动机不同，以 motive 字段区分。',
+  cruelty: '动物是暴力的直接目标——判决认定或有力指控存在直接针对动物的伤害行为。',
+  retaliation: '因偷狗指控、纠纷或其他争执而报复行为人本人，动物伤害是争议的起因或背景，不是本案暴力的直接目标。',
+  other_true: '判决认定的真实动物伤害，不完全符合以上四类的核心特征（如宠物医疗纠纷死亡）。',
+};

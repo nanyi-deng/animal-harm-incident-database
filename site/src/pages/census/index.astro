@@ -1,0 +1,179 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import census from '../../data/census.json';
+import { CENSUS_CATEGORY_LABEL, CENSUS_CATEGORY_BLURB } from '../../lib/labels.js';
+
+const categories = [...new Set(census.map((r) => r.category).filter(Boolean))].sort();
+const animals = [...new Set(census.map((r) => r.animal).filter(Boolean))].sort();
+---
+<Layout title="判决书" description="AHID 判决书 census 子语料——涉动物伤害的刑事判决全量检索结果，可按分类、动物类型筛选，逐条展开阅读判决事实全文。">
+  <div class="wrap-wide">
+    <h1 style="margin: 40px 0 4px;">判决书 census</h1>
+    <p style="color: var(--text-muted); max-width: 70ch;">
+      来自 <a href="https://huggingface.co/datasets/china-ai-law-challenge/cail2018" target="_blank" rel="noopener">CAIL2018</a>
+      （268 万份 2018 年前公布的单被告人刑事判决，"法研杯"官方研究语料）的全量检索结果。
+      与上方"事件"页面依赖的公开报道不同，这批数据有明确的抽样框——任何人下载同一数据集、
+      跑同一检索式，都能复现同一候选集。全部 {census.length} 条经人工核实后收录，详见
+      <a href="/methodology/">方法与数据</a>页 §13。
+    </p>
+
+    <div class="disclaimer">
+      <strong>关于这批数据</strong> — 这是一张独立的扁平表，不套用上方"事件"页面的多来源交叉核验与
+      证据充分度评分（判决书是单一权威信源，那套评分不适用）。每条记录附带证据类型透明标记，
+      区分"判决直接认定的伤害"与"按作案模式推定纳入""未经判决认定的声称"——点开记录查看完整判决
+      事实文本与标记说明，不要只看分类标签。
+    </div>
+
+    <div class="stat-row">
+      <div class="stat"><span class="n">{census.length}</span><span class="label">收录判决</span></div>
+      <div class="stat"><span class="n">{categories.length}</span><span class="label">分类类型</span></div>
+      <div class="stat"><span class="n">{census.filter((r) => r.category === 'poaching').length}</span><span class="label">偷狗/偷猎类</span></div>
+      <div class="stat"><span class="n">{census.filter((r) => r.claim_verified === 'false' || r.outcome_documented === 'false' || r.animal_directly_harmed === 'false').length}</span><span class="label">证据推定/未证实类</span></div>
+    </div>
+
+    <div class="filters">
+      <select id="f-category"><option value="">全部分类</option>
+        {categories.map((c) => <option value={c}>{CENSUS_CATEGORY_LABEL[c] || c}</option>)}
+      </select>
+      <select id="f-animal"><option value="">全部动物类型</option>
+        {animals.map((a) => <option value={a}>{a}</option>)}
+      </select>
+      <input id="f-search" type="text" placeholder="搜索罪名/摘要关键词…" />
+    </div>
+
+    <p id="count-line" style="color: var(--text-muted); font-size: 0.88rem; margin: 4px 0 16px;"></p>
+
+    <div id="list">
+      {census.map((r, idx) => (
+        <div class="census-item" data-category={r.category || ''} data-animal={r.animal || ''}
+             data-search={`${r.summary} ${r.charges} ${r.motive}`.toLowerCase()}>
+          <button class="census-row" data-target={`detail-${idx}`}>
+            <div class="meta-row">
+              <span class="badge-outline">{CENSUS_CATEGORY_LABEL[r.category] || r.category}</span>
+              <span class="badge-outline">{r.animal || '动物类型未确定'}</span>
+              <span class="badge-outline">{r.charges}</span>
+            </div>
+            <div class="summary">{r.summary}</div>
+          </button>
+          <div class="census-detail" id={`detail-${idx}`} hidden>
+            <p class="detail-label">{CENSUS_CATEGORY_LABEL[r.category]} — {CENSUS_CATEGORY_BLURB[r.category]}</p>
+            {(r.claim_verified === 'false' || r.outcome_documented === 'false' ||
+              r.animal_directly_harmed === 'false' || r.perpetrator_confirmed === 'false') && (
+              <p class="detail-flag">
+                证据透明标记：
+                {r.outcome_documented === 'false' && '判决未明写动物最终结局，按作案手段/动机与已确认案例一致推定纳入。'}
+                {r.claim_verified === 'false' && '相关指控（如下毒）未经判决认定为事实，采信声称本身计入。'}
+                {r.animal_directly_harmed === 'false' && '动物本身是否受伤未被证实。'}
+                {r.perpetrator_confirmed === 'false' && '伤害真实发生，但加害人身份未坐实。'}
+                {r.recovered_after_theft === 'true' && '盗窃既遂后动物被追回。'}
+              </p>
+            )}
+            {r.correction_note && <p class="detail-note">人工审核说明：{r.correction_note}</p>}
+            <p class="detail-fact">{r.fact}</p>
+            <p class="detail-meta">
+              编号 {r.census_id} · 罪名 {r.charges} · 动机 {r.motive || '未提取'} ·
+              数量 {r.n_animals || '未确定'} · AI 分类置信度 {r.confidence} ·
+              审核方式 {r.review_status === 'reviewed' ? '人工审核' : '高置信自动纳入'}
+            </p>
+          </div>
+        </div>
+      ))}
+    </div>
+  </div>
+
+  <script>
+    const categorySel = document.getElementById('f-category');
+    const animalSel = document.getElementById('f-animal');
+    const searchInput = document.getElementById('f-search');
+    const countLine = document.getElementById('count-line');
+    const items = Array.from(document.querySelectorAll('.census-item'));
+
+    function applyFilters() {
+      const category = categorySel.value, animal = animalSel.value;
+      const search = searchInput.value.trim().toLowerCase();
+      let shown = 0;
+      for (const el of items) {
+        const show =
+          (!category || el.dataset.category === category) &&
+          (!animal || el.dataset.animal === animal) &&
+          (!search || el.dataset.search.includes(search));
+        el.style.display = show ? '' : 'none';
+        if (show) shown++;
+      }
+      countLine.textContent = `显示 ${shown} / ${items.length} 条`;
+    }
+    for (const el of [categorySel, animalSel]) el.addEventListener('change', applyFilters);
+    searchInput.addEventListener('input', applyFilters);
+    applyFilters();
+
+    // Expand/collapse -- one item at a time is not enforced, visitors can open
+    // several; each button only toggles its own detail panel.
+    document.getElementById('list').addEventListener('click', (e) => {
+      const btn = e.target.closest('.census-row');
+      if (!btn) return;
+      const detail = document.getElementById(btn.dataset.target);
+      const willShow = detail.hidden;
+      detail.hidden = !willShow;
+      btn.setAttribute('aria-expanded', String(willShow));
+    });
+  </script>
+
+  <style>
+    .census-item {
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      margin-bottom: 10px;
+      overflow: hidden;
+    }
+    .census-row {
+      display: block;
+      width: 100%;
+      text-align: left;
+      background: var(--bg-raised);
+      border: none;
+      padding: 14px 16px;
+      cursor: pointer;
+      font: inherit;
+      color: inherit;
+    }
+    .census-row:hover { background: var(--bg-hover, var(--bg-raised)); }
+    .census-row .meta-row { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 6px; }
+    .census-row .summary { color: var(--text-muted); font-size: 0.94rem; }
+    .census-detail {
+      padding: 16px;
+      border-top: 1px solid var(--border);
+      background: var(--bg);
+    }
+    .detail-label { font-weight: 600; margin-bottom: 8px; }
+    .detail-flag {
+      font-size: 0.88rem;
+      color: var(--status-ax);
+      background: color-mix(in srgb, var(--status-ax) 12%, transparent);
+      padding: 8px 10px;
+      border-radius: 6px;
+      margin-bottom: 10px;
+    }
+    .detail-note {
+      font-size: 0.88rem;
+      color: var(--text-muted);
+      font-style: italic;
+      margin-bottom: 10px;
+    }
+    .detail-fact {
+      white-space: pre-wrap;
+      line-height: 1.7;
+      font-size: 0.94rem;
+      margin-bottom: 10px;
+    }
+    .detail-meta { font-size: 0.82rem; color: var(--text-muted); }
+    #f-search {
+      padding: 8px 10px;
+      font: inherit;
+      color: var(--text);
+      background: var(--bg-raised);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      min-width: 220px;
+    }
+  </style>
+</Layout>
