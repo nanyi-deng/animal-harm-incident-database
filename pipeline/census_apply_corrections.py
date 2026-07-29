@@ -170,6 +170,29 @@ RESCAN_FP_TO_RETALIATION_IDS = {
     'CAIL-cail_first_stage_train-00000-of-00004.parquet-079930',  # 洪某某被诬陷偷狗后持刀报复诬告者，核心是报复诬告非动物受害
 }
 
+# --- 第四轮：HRL-026 A 层假阳性重扫（2026-07-22）---
+# B 层（84条，含强搭配词）100%核查完后，对 A 层（248条，不含强搭配词）236条未审核
+# fp 做同样的全量人工重读方法学，但先用动物词局部上下文窗口（±35字）做初筛而非
+# 逐条通读全文（A 层每条平均含 3+ 起独立犯罪事实，通读成本远高于 B 层单一案情的
+# 判决），236 条中筛出 17 条候选做深度全文核实。结果：5 条确认为真实动物伤害，
+# 12 条经全文核实后确认原判 fp 无误。真实缺陷率 5/17≈29%（远低于 B 层的 82%，
+# 印证了"A层不含强关键词故偏差机制大概率不适用"的推测）。
+A_RESCAN_TO_CRUELTY_IDS = {
+    'CAIL-cail_first_stage_train-00001-of-00004.parquet-267243',  # 狗对其吠叫，捡石块扔向小狗（未遂，狗是否受伤未证实）
+    'CAIL-cail_first_stage_train-00001-of-00004.parquet-401724',  # 小狗踩到被告人，被告人打了小狗
+    'CAIL-cail_first_stage_train-00003-of-00004.parquet-299429',  # 怀疑同厂职工将自家狗毒死，怀疑未经判决认定
+}
+A_RESCAN_TO_POACHING_IDS = {
+    'CAIL-cail_first_stage_train-00001-of-00004.parquet-315202',  # 指控邻居偷宰其狗，指控未经判决认定（双方各执一词）
+}
+# 宠物医疗事故致死：新的证据类型，不完全匹配现有 outcome_documented/
+# claim_verified/animal_directly_harmed 任一标记——狗死亡是双方无争议的既定
+# 背景事实（案件本身即因此引发），但医疗过失是否成立未经司法认定，判决审理的
+# 是后续的故意毁坏财物行为。不强套现有标记，仅在 correction_note 如实说明。
+A_RESCAN_TO_OTHER_TRUE_IDS = {
+    'CAIL-cail_first_stage_test-00000-of-00001.parquet-190840',  # 宠物狗在店内治疗后死亡，双方发生医疗纠纷，被告人报复性砸坏店内医疗设备
+}
+
 recs = [json.loads(l) for l in open('pipeline/census_classified.jsonl') if l.strip()]
 
 presumed, marked_excluded, reclassified = [], [], []
@@ -272,6 +295,28 @@ for r in recs:
         r['correction_note'] = 'HRL-026定向重扫：原判fp有误，本记录核心是行为人因被诬陷偷狗而报复诬告者，归retaliation'
         round3.append((cid, 'retaliation'))
 
+# --- 第四轮：HRL-026 A 层假阳性重扫修正（236条局部上下文初筛出17条候选的全文核实结果）---
+round4 = []
+for r in recs:
+    cid = r['census_id']
+
+    if cid in A_RESCAN_TO_CRUELTY_IDS and r['category'] == 'fp':
+        r['category'] = 'cruelty'
+        r['animal_directly_harmed'] = False
+        r['correction_note'] = 'HRL-026 A层定向重扫：原判fp有误，动物是暴力直接目标或蓄意伤害指控的对象，归cruelty；受伤情况未证实故animal_directly_harmed=False'
+        round4.append((cid, 'cruelty'))
+
+    elif cid in A_RESCAN_TO_POACHING_IDS and r['category'] == 'fp':
+        r['category'] = 'poaching'
+        r['animal_directly_harmed'] = False
+        r['correction_note'] = 'HRL-026 A层定向重扫：原判fp有误，判决记载偷狗指控（未经判决认定为事实，双方各执一词），按既定政策纳入poaching'
+        round4.append((cid, 'poaching'))
+
+    elif cid in A_RESCAN_TO_OTHER_TRUE_IDS and r['category'] == 'fp':
+        r['category'] = 'other_true'
+        r['correction_note'] = 'HRL-026 A层定向重扫：原判fp有误，宠物在医疗纠纷中死亡（双方无争议的既定背景事实，案件本身即由此引发），但医疗过失是否成立未经司法认定，判决审理的是后续故意毁坏财物行为——新的证据类型，不完全匹配现有透明标记'
+        round4.append((cid, 'other_true'))
+
 with open('pipeline/census_classified.jsonl', 'w') as f:
     for r in recs:
         f.write(json.dumps(r, ensure_ascii=False) + '\n')
@@ -280,7 +325,8 @@ print(f"✓ 产业链推定升级为 poaching: {len(presumed)} 条")
 print(f"✓ 标记建议排除（追回未受伤，明确证据）: {len(marked_excluded)} 条 — {marked_excluded}")
 print(f"✓ 特殊性质重分类: {len(reclassified)} 条 — {reclassified}")
 print(f"✓ 第二轮人工审核修正: {len(round2)} 条 — {round2}")
-print(f"✓ 第三轮HRL-026定向重扫修正: {len(round3)} 条（62 poaching + 1 retaliation，14条核实后确认原fp正确未改）")
+print(f"✓ 第三轮HRL-026定向重扫修正(B层): {len(round3)} 条（62 poaching + 1 retaliation，14条核实后确认原fp正确未改）")
+print(f"✓ 第四轮HRL-026定向重扫修正(A层): {len(round4)} 条（{sum(1 for _,c in round4 if c=='cruelty')} cruelty + {sum(1 for _,c in round4 if c=='poaching')} poaching + {sum(1 for _,c in round4 if c=='other_true')} other_true，17条候选中12条核实后确认原fp正确未改）")
 
 from collections import Counter
 cat_cnt = Counter(r['category'] for r in recs)
