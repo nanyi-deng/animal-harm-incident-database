@@ -24,6 +24,16 @@ with open(csv_input, encoding='utf-8-sig') as f:
 POACHING_CONTEXT_FLAGS = ('outcome_documented', 'recovered_after_theft', 'animal_directly_harmed')
 CRUELTY_CONTEXT_FLAGS = ('claim_verified', 'perpetrator_confirmed')
 
+# HRL-025（2026-07-23）：3 对近重复案件的终判标签不一致，用户逐对裁定统一。
+# 这两条的原始浏览器审核记录（census_review_result.csv）里已经有一个明确的
+# category_user 值，若不做终局覆盖，下面的 user_review 分支会用那个旧值，
+# 用户这次的新裁定就不生效。刻意不改写 census_review_result.csv 本身——
+# 那是用户原始审核的历史记录，这里是审核之后的一次独立复核裁定，两者都要留痕。
+HRL025_FINAL_ARBITRATION = {
+    'CAIL-cail_first_stage_train-00002-of-00004.parquet-119321': 'poaching',   # 原审核标 borderline，与同案340102（poaching）统一
+    'CAIL-cail_first_stage_train-00002-of-00004.parquet-380166': 'cruelty',    # 原审核标 other_true，与同案269073（cruelty）统一
+}
+
 
 def normalize_metadata(rec):
     """把证据标记与 correction_note 对齐到终判分类 category_final。"""
@@ -57,6 +67,18 @@ for r in classified.values():
         r['category_final'] = r['category'] if r['category'] != 'fp' else 'fp'
         r['included'] = r['category'] != 'fp'
         r['review_notes'] = '[auto-included]'
+
+    # HRL-025 终局裁定：优先级高于上面任何一层（包括用户原始浏览器审核），
+    # 因为这是审核之后针对具体已发现问题的独立复核决定。
+    if r['census_id'] in HRL025_FINAL_ARBITRATION:
+        r['category_final'] = HRL025_FINAL_ARBITRATION[r['census_id']]
+        r['review_notes'] = (r.get('review_notes', '') + ' [HRL-025 复核终判：与近重复副本标签统一]').strip()
+
+    # 范围排除（HRL-025）：真实案件但不在 census 范围内（如野生动物盗猎），
+    # 与假阳性（fp，案件本身不真实）是两回事，不应混淆为同一种"排除"。
+    if r.get('out_of_scope'):
+        r['included'] = False
+        r['review_notes'] = (r.get('review_notes', '') + ' [HRL-025 范围排除：真实案件但超出census范围，非假阳性]').strip()
 
     normalize_metadata(r)
 

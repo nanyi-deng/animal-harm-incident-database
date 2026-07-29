@@ -193,6 +193,30 @@ A_RESCAN_TO_OTHER_TRUE_IDS = {
     'CAIL-cail_first_stage_test-00000-of-00001.parquet-190840',  # 宠物狗在店内治疗后死亡，双方发生医疗纠纷，被告人报复性砸坏店内医疗设备
 }
 
+# --- 第五轮：HRL-025 同案重复标签统一 + 野生动物边界案排除（2026-07-23，用户决定）---
+# 92 对近重复里有 3 对终判标签不一致（同一案件因分片不同被处理两次得出不同结论），
+# 用户逐对裁定统一到哪个标签。以下两条不涉及人工审核集覆盖冲突（这两条 census_id
+# 均未出现在 census_review_result.csv 里），故直接在此层修正即可生效；另外两条
+# （119321、380166）因用户浏览器审核时已对其中一份副本给出过 category_user，
+# 会被 census_apply_review.py 的人工审核层覆盖，故那两条的统一改在
+# census_apply_review.py 里做"终局裁定"层，不在此处，且不改写用户原始审核记录。
+DUP_LABEL_UNIFY_TO_CRUELTY_IDS = {
+    'CAIL-cail_exercise_contest_train-00000-of-00001.parquet-041314',  # 狗叫持石头砸狗引发放火砍人，与036056同案，统一为cruelty
+}
+DUP_LABEL_UNIFY_TO_RETALIATION_IDS = {
+    'CAIL-cail_exercise_contest_train-00000-of-00001.parquet-124396',  # 林地纠纷打死狗/母猪/鸡，与292444同案，统一为retaliation
+}
+# 野生动物边界案：余某私设电网猎捕野生动物电死麂子+野猪，罪名"以危险方法危害
+# 公共安全"而非"非法狩猎"，技术上未违反 HRL-023"野生动物盗猎/狩猎暂不纳入"的
+# 检索排除规则字面（走的是公共安全关键词路径非狩猎罪路径），但用户确认这本质
+# 就是一起野生动物盗猎案，按 HRL-023 精神排除出 census——不是假阳性（案件真实
+# 发生），是范围排除（scope exclusion），故不改 category，只标记排除原因，
+# 由 census_apply_review.py 读取此标记强制 included=False。
+WILDLIFE_OUT_OF_SCOPE_IDS = {
+    'CAIL-cail_exercise_contest_train-00000-of-00001.parquet-132978',
+    'CAIL-cail_first_stage_train-00003-of-00004.parquet-338743',
+}
+
 recs = [json.loads(l) for l in open('pipeline/census_classified.jsonl') if l.strip()]
 
 presumed, marked_excluded, reclassified = [], [], []
@@ -317,6 +341,26 @@ for r in recs:
         r['correction_note'] = 'HRL-026 A层定向重扫：原判fp有误，宠物在医疗纠纷中死亡（双方无争议的既定背景事实，案件本身即由此引发），但医疗过失是否成立未经司法认定，判决审理的是后续故意毁坏财物行为——新的证据类型，不完全匹配现有透明标记'
         round4.append((cid, 'other_true'))
 
+# --- 第五轮：HRL-025 同案标签统一（不涉及审核集覆盖的两条）+ 野生动物范围排除标记 ---
+round5 = []
+for r in recs:
+    cid = r['census_id']
+
+    if cid in DUP_LABEL_UNIFY_TO_CRUELTY_IDS and r['category'] != 'cruelty':
+        r['category'] = 'cruelty'
+        r['correction_note'] = 'HRL-025：与另一近重复副本终判标签不一致，用户裁定统一为cruelty'
+        round5.append((cid, 'cruelty'))
+
+    elif cid in DUP_LABEL_UNIFY_TO_RETALIATION_IDS and r['category'] != 'retaliation':
+        r['category'] = 'retaliation'
+        r['correction_note'] = 'HRL-025：与另一近重复副本终判标签不一致，用户裁定统一为retaliation'
+        round5.append((cid, 'retaliation'))
+
+    if cid in WILDLIFE_OUT_OF_SCOPE_IDS:
+        r['out_of_scope'] = True
+        r['correction_note'] = 'HRL-025：真实野生动物盗猎案（私设电网猎捕，罪名"以危险方法危害公共安全"非"非法狩猎"），技术上未违反HRL-023检索排除规则字面但本质是野生动物盗猎，用户确认按HRL-023精神排除出census——非假阳性，是范围排除'
+        round5.append((cid, 'out_of_scope'))
+
 with open('pipeline/census_classified.jsonl', 'w') as f:
     for r in recs:
         f.write(json.dumps(r, ensure_ascii=False) + '\n')
@@ -327,6 +371,7 @@ print(f"✓ 特殊性质重分类: {len(reclassified)} 条 — {reclassified}")
 print(f"✓ 第二轮人工审核修正: {len(round2)} 条 — {round2}")
 print(f"✓ 第三轮HRL-026定向重扫修正(B层): {len(round3)} 条（62 poaching + 1 retaliation，14条核实后确认原fp正确未改）")
 print(f"✓ 第四轮HRL-026定向重扫修正(A层): {len(round4)} 条（{sum(1 for _,c in round4 if c=='cruelty')} cruelty + {sum(1 for _,c in round4 if c=='poaching')} poaching + {sum(1 for _,c in round4 if c=='other_true')} other_true，17条候选中12条核实后确认原fp正确未改）")
+print(f"✓ 第五轮HRL-025标签统一+范围排除: {len(round5)} 条 — {round5}")
 
 from collections import Counter
 cat_cnt = Counter(r['category'] for r in recs)
