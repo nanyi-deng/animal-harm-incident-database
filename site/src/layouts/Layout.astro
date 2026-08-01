@@ -1,11 +1,12 @@
 ---
 import '../styles/global.css';
+import { t, tZh } from '../lib/i18n.js';
 
 const { title, description } = Astro.props;
-const fullTitle = title ? `${title} · AHID` : 'AHID — 动物伤害事件数据库';
+const fullTitle = title ? `${title} · AHID` : 'AHID — Animal Harm Incident Database';
 ---
 <!doctype html>
-<html lang="zh-Hans">
+<html lang="en">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -21,14 +22,15 @@ const fullTitle = title ? `${title} · AHID` : 'AHID — 动物伤害事件数�
     <div class="wrap-wide">
       <a class="site-title" href="/">
         AHID
-        <small>动物伤害事件数据库 · Animal Harm Incident Database</small>
+        <small data-i18n data-en={t('site.title_small')} data-zh={tZh('site.title_small')}>{t('site.title_small')}</small>
       </a>
       <nav class="site-nav">
-        <a href="/incidents/">事件</a>
-        <a href="/census/">判决书</a>
-        <a href="/methodology/">方法与数据</a>
-        <a href="/appeals/">申诉与更正</a>
-        <a href="/submit/">提交线索</a>
+        <a href="/incidents/" data-i18n data-en={t('nav.incidents')} data-zh={tZh('nav.incidents')}>{t('nav.incidents')}</a>
+        <a href="/census/" data-i18n data-en={t('nav.census')} data-zh={tZh('nav.census')}>{t('nav.census')}</a>
+        <a href="/methodology/" data-i18n data-en={t('nav.methodology')} data-zh={tZh('nav.methodology')}>{t('nav.methodology')}</a>
+        <a href="/appeals/" data-i18n data-en={t('nav.appeals')} data-zh={tZh('nav.appeals')}>{t('nav.appeals')}</a>
+        <a href="/submit/" data-i18n data-en={t('nav.submit')} data-zh={tZh('nav.submit')}>{t('nav.submit')}</a>
+        <button id="lang-toggle" class="lang-toggle" type="button">中文</button>
       </nav>
     </div>
   </header>
@@ -38,15 +40,61 @@ const fullTitle = title ? `${title} · AHID` : 'AHID — 动物伤害事件数�
   <footer class="site-footer">
     <div class="wrap-wide">
       <p>
-        本网站使用自动化工具收集、保存、归并和分析公开互联网信息。事件页面反映系统在指定时间找到的公开来源及其相互关系，
-        不构成司法认定、独立调查结论或对任何个人的定罪。系统可能出现遗漏、误归并或来源偏差。
+        <span data-i18n data-en={t('footer.disclaimer')} data-zh={tZh('footer.disclaimer')}>{t('footer.disclaimer')}</span>
       </p>
       <p>
-        本站在部分中国大陆网络环境下可能访问不稳定；如遇到问题，可通过
-        <a href="https://doi.org/10.5281/zenodo.21462312">Zenodo 数据集</a>直接获取研究数据。
+        <span data-i18n data-en={t('footer.reachability')} data-zh={tZh('footer.reachability')}>{t('footer.reachability')}</span><a
+          href="https://doi.org/10.5281/zenodo.21462312"
+          data-i18n data-en={t('footer.zenodo_link_text')} data-zh={tZh('footer.zenodo_link_text')}
+        >{t('footer.zenodo_link_text')}</a><span data-i18n data-en={t('footer.reachability_end')} data-zh={tZh('footer.reachability_end')}>{t('footer.reachability_end')}</span>
       </p>
-      <p>预览构建 · 未公开部署 · <a href="https://github.com/nanyi-deng/animal-harm-incident-database">GitHub</a></p>
+      <p>
+        <span data-i18n data-en={t('footer.preview')} data-zh={tZh('footer.preview')}>{t('footer.preview')}</span>
+        · <span data-i18n data-en={t('footer.not_public')} data-zh={tZh('footer.not_public')}>{t('footer.not_public')}</span>
+        · <a href="https://github.com/nanyi-deng/animal-harm-incident-database">GitHub</a>
+      </p>
     </div>
   </footer>
+  <script>
+    const LOCALE_KEY = 'ahid_locale';
+
+    function applyLocale(locale) {
+      window.AHID_LOCALE = locale;
+      document.documentElement.lang = locale === 'zh' ? 'zh-Hans' : 'en';
+      document.querySelectorAll('[data-i18n]').forEach((el) => {
+        const val = locale === 'zh' ? el.dataset.zh : el.dataset.en;
+        if (val != null) el.textContent = val;
+      });
+      document.querySelectorAll('[data-i18n-placeholder]').forEach((el) => {
+        const val = locale === 'zh' ? el.dataset.zh : el.dataset.en;
+        if (val != null) el.placeholder = val;
+      });
+      const toggle = document.getElementById('lang-toggle');
+      if (toggle) toggle.textContent = locale === 'zh' ? 'English' : '中文';
+      localStorage.setItem(LOCALE_KEY, locale);
+      window.dispatchEvent(new CustomEvent('ahid-locale-changed', { detail: { locale } }));
+    }
+
+    const saved = localStorage.getItem(LOCALE_KEY) || 'en';
+    applyLocale(saved);
+
+    document.getElementById('lang-toggle')?.addEventListener('click', () => {
+      const current = localStorage.getItem(LOCALE_KEY) || 'en';
+      applyLocale(current === 'zh' ? 'en' : 'zh');
+    });
+  </script>
+  <style>
+    .lang-toggle {
+      background: none;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: inherit;
+      font: inherit;
+      font-size: 0.88rem;
+      padding: 4px 10px;
+      cursor: pointer;
+    }
+    .lang-toggle:hover { background: var(--bg-hover, var(--bg-raised)); }
+  </style>
 </body>
 </html>

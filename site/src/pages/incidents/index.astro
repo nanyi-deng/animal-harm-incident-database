@@ -1,31 +1,37 @@
 ---
 import Layout from '../../layouts/Layout.astro';
 import incidents from '../../data/incidents.json';
-import { STATUS_LABEL, locationLabel } from '../../lib/labels.js';
+import { STATUS_LABEL, STATUS_LABEL_EN, locationLabel } from '../../lib/labels.js';
+import { t, tZh } from '../../lib/i18n.js';
 
 const sorted = [...incidents].sort((a, b) => (b.event_date_start || '').localeCompare(a.event_date_start || ''));
 const provinces = [...new Set(incidents.map((i) => i.province).filter(Boolean))].sort();
 const categories = [...new Set(incidents.map((i) => i.animal_category).filter(Boolean))].sort();
 const statuses = [...new Set(incidents.map((i) => i.automation_status).filter(Boolean))];
+
+function Tx(key, vars = {}) {
+  return { en: t(key, vars), zh: tZh(key, vars) };
+}
 ---
 <Layout title="事件列表" description="AHID 已收录事件列表，可按省份、动物类型、自动状态筛选。">
   <div class="wrap-wide">
-    <h1 style="margin: 40px 0 4px;">事件列表</h1>
-    <p style="color: var(--text-muted);">共 {incidents.length} 条已归并事件。筛选与排序为客户端脚本，不发送任何请求。</p>
+    <h1 style="margin: 40px 0 4px;" data-i18n data-en={Tx('incidents.title').en} data-zh={Tx('incidents.title').zh}>{Tx('incidents.title').en}</h1>
+    <p style="color: var(--text-muted);" data-i18n
+       data-en={Tx('incidents.intro', { n: incidents.length }).en} data-zh={Tx('incidents.intro', { n: incidents.length }).zh}>{Tx('incidents.intro', { n: incidents.length }).en}</p>
 
     <div class="filters">
-      <select id="f-province"><option value="">全部省份</option>
+      <select id="f-province"><option value="" data-i18n data-en={Tx('incidents.filter.all_provinces').en} data-zh={Tx('incidents.filter.all_provinces').zh}>{Tx('incidents.filter.all_provinces').en}</option>
         {provinces.map((p) => <option value={p}>{p}</option>)}
       </select>
-      <select id="f-category"><option value="">全部动物类型</option>
+      <select id="f-category"><option value="" data-i18n data-en={Tx('incidents.filter.all_categories').en} data-zh={Tx('incidents.filter.all_categories').zh}>{Tx('incidents.filter.all_categories').en}</option>
         {categories.map((c) => <option value={c}>{c}</option>)}
       </select>
-      <select id="f-status"><option value="">全部状态</option>
-        {statuses.map((s) => <option value={s}>{STATUS_LABEL[s] || s}</option>)}
+      <select id="f-status"><option value="" data-i18n data-en={Tx('incidents.filter.all_statuses').en} data-zh={Tx('incidents.filter.all_statuses').zh}>{Tx('incidents.filter.all_statuses').en}</option>
+        {statuses.map((s) => <option value={s} data-i18n data-en={STATUS_LABEL_EN[s] || s} data-zh={STATUS_LABEL[s] || s}>{STATUS_LABEL_EN[s] || s}</option>)}
       </select>
-      <select id="f-minor"><option value="">未成年人涉入：不限</option>
-        <option value="yes">涉及未成年人</option>
-        <option value="no">不涉及未成年人</option>
+      <select id="f-minor"><option value="" data-i18n data-en={Tx('incidents.filter.minor_unrestricted').en} data-zh={Tx('incidents.filter.minor_unrestricted').zh}>{Tx('incidents.filter.minor_unrestricted').en}</option>
+        <option value="yes" data-i18n data-en={Tx('incidents.filter.minor_yes').en} data-zh={Tx('incidents.filter.minor_yes').zh}>{Tx('incidents.filter.minor_yes').en}</option>
+        <option value="no" data-i18n data-en={Tx('incidents.filter.minor_no').en} data-zh={Tx('incidents.filter.minor_no').zh}>{Tx('incidents.filter.minor_no').en}</option>
       </select>
     </div>
 
@@ -35,14 +41,23 @@ const statuses = [...new Set(incidents.map((i) => i.automation_status).filter(Bo
            data-status={i.automation_status || ''} data-minor={i.minor_involvement || ''}
            href={`/incidents/${i.incident_id}/`}>
           <div class="meta-row">
-            <span class={`badge badge-${i.automation_status}`}>{STATUS_LABEL[i.automation_status]}</span>
+            <span class={`badge badge-${i.automation_status}`} data-i18n
+                  data-en={STATUS_LABEL_EN[i.automation_status]} data-zh={STATUS_LABEL[i.automation_status]}>{STATUS_LABEL_EN[i.automation_status]}</span>
             <span class="badge-outline">{locationLabel(i)}</span>
-            <span class="badge-outline">{i.event_date_start || '日期未确定'}</span>
-            {i.disputed_flag === 1 && <span class="badge-outline" style="color: var(--status-ax);">存在争议</span>}
+            <span class="badge-outline" data-i18n data-en={Tx('home.date_unknown').en} data-zh={Tx('home.date_unknown').zh}>{i.event_date_start || Tx('home.date_unknown').en}</span>
+            {i.disputed_flag === 1 && (
+              <span class="badge-outline" style="color: var(--status-ax);" data-i18n
+                    data-en={Tx('incidents.disputed_badge').en} data-zh={Tx('incidents.disputed_badge').zh}>{Tx('incidents.disputed_badge').en}</span>
+            )}
           </div>
           <div class="summary">
-            {i.incident_id} · {i.animal_category} · {(i.harm_categories || '（AF：无真实伤害，见页面说明）').split('|').join('、')}
-            · 证据充分度 {i.evidence_sufficiency_score ?? '—'}/100
+            {i.incident_id} · {i.animal_category} ·{' '}
+            <span data-i18n data-en={i.harm_categories ? (i.harm_categories || '').split('|').join('、') : Tx('incidents.af_placeholder').en}
+                  data-zh={i.harm_categories ? (i.harm_categories || '').split('|').join('、') : Tx('incidents.af_placeholder').zh}>
+              {i.harm_categories ? (i.harm_categories || '').split('|').join('、') : Tx('incidents.af_placeholder').en}
+            </span>
+            {' · '}<span data-i18n data-en={Tx('incidents.evidence_sufficiency_label').en} data-zh={Tx('incidents.evidence_sufficiency_label').zh}>{Tx('incidents.evidence_sufficiency_label').en}</span>{' '}
+            {i.evidence_sufficiency_score ?? '—'}/100
           </div>
         </a>
       ))}

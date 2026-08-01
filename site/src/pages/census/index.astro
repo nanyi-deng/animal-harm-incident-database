@@ -1,83 +1,117 @@
 ---
 import Layout from '../../layouts/Layout.astro';
 import census from '../../data/census.json';
-import { CENSUS_CATEGORY_LABEL, CENSUS_CATEGORY_BLURB } from '../../lib/labels.js';
+import {
+  CENSUS_CATEGORY_LABEL, CENSUS_CATEGORY_BLURB,
+  CENSUS_CATEGORY_LABEL_EN, CENSUS_CATEGORY_BLURB_EN,
+} from '../../lib/labels.js';
+import { t, tZh } from '../../lib/i18n.js';
 
 const categories = [...new Set(census.map((r) => r.category).filter(Boolean))].sort();
 const animals = [...new Set(census.map((r) => r.animal).filter(Boolean))].sort();
+
+function Tx(key, vars = {}) {
+  return { en: t(key, vars), zh: tZh(key, vars) };
+}
+
+function getFlagKeys(r) {
+  const keys = [];
+  if (r.outcome_documented === 'false') keys.push('census.flag.outcome_undocumented');
+  if (r.claim_verified === 'false') keys.push('census.flag.claim_unverified');
+  if (r.animal_directly_harmed === 'false') keys.push('census.flag.animal_not_confirmed_harmed');
+  if (r.perpetrator_confirmed === 'false') keys.push('census.flag.perpetrator_unconfirmed');
+  if (r.recovered_after_theft === 'true') keys.push('census.flag.recovered');
+  return keys;
+}
 ---
 <Layout title="判决书" description="AHID 判决书 census 子语料——涉动物伤害的刑事判决全量检索结果，可按分类、动物类型筛选，逐条展开阅读判决事实全文。">
   <div class="wrap-wide">
-    <h1 style="margin: 40px 0 4px;">判决书 census</h1>
+    <h1 style="margin: 40px 0 4px;" data-i18n data-en={Tx('census.title').en} data-zh={Tx('census.title').zh}>{Tx('census.title').en}</h1>
     <p style="color: var(--text-muted); max-width: 70ch;">
-      来自 <a href="https://huggingface.co/datasets/china-ai-law-challenge/cail2018" target="_blank" rel="noopener">CAIL2018</a>
-      （268 万份 2018 年前公布的单被告人刑事判决，"法研杯"官方研究语料）的全量检索结果。
-      与上方"事件"页面依赖的公开报道不同，这批数据有明确的抽样框——任何人下载同一数据集、
-      跑同一检索式，都能复现同一候选集。全部 {census.length} 条经人工核实后收录，详见
-      <a href="/methodology/">方法与数据</a>页 §13。
+      <span data-i18n data-en={Tx('census.intro_1').en} data-zh={Tx('census.intro_1').zh}>{Tx('census.intro_1').en}</span><a
+        href="https://huggingface.co/datasets/china-ai-law-challenge/cail2018" target="_blank" rel="noopener"
+        data-i18n data-en={Tx('census.intro_cail_link').en} data-zh={Tx('census.intro_cail_link').zh}
+      >{Tx('census.intro_cail_link').en}</a><span data-i18n data-en={Tx('census.intro_2', { n: census.length }).en} data-zh={Tx('census.intro_2', { n: census.length }).zh}>{Tx('census.intro_2', { n: census.length }).en}</span><a
+        href="/methodology/" data-i18n data-en={Tx('census.intro_methodology_link').en} data-zh={Tx('census.intro_methodology_link').zh}
+      >{Tx('census.intro_methodology_link').en}</a><span data-i18n data-en={Tx('census.intro_3').en} data-zh={Tx('census.intro_3').zh}>{Tx('census.intro_3').en}</span>
     </p>
 
     <div class="disclaimer">
-      <strong>关于这批数据</strong> — 这是一张独立的扁平表，不套用上方"事件"页面的多来源交叉核验与
-      证据充分度评分（判决书是单一权威信源，那套评分不适用）。每条记录附带证据类型透明标记，
-      区分"判决直接认定的伤害"与"按作案模式推定纳入""未经判决认定的声称"——点开记录查看完整判决
-      事实文本与标记说明，不要只看分类标签。
+      <strong data-i18n data-en={Tx('census.about_title').en} data-zh={Tx('census.about_title').zh}>{Tx('census.about_title').en}</strong> —
+      <span data-i18n data-en={Tx('census.about_body').en} data-zh={Tx('census.about_body').zh}>{Tx('census.about_body').en}</span>
     </div>
 
     <div class="stat-row">
-      <div class="stat"><span class="n">{census.length}</span><span class="label">收录判决</span></div>
-      <div class="stat"><span class="n">{categories.length}</span><span class="label">分类类型</span></div>
-      <div class="stat"><span class="n">{census.filter((r) => r.category === 'poaching').length}</span><span class="label">偷狗/偷猎类</span></div>
-      <div class="stat"><span class="n">{census.filter((r) => r.claim_verified === 'false' || r.outcome_documented === 'false' || r.animal_directly_harmed === 'false').length}</span><span class="label">证据推定/未证实类</span></div>
+      <div class="stat"><span class="n">{census.length}</span><span class="label" data-i18n data-en={Tx('census.stat.total').en} data-zh={Tx('census.stat.total').zh}>{Tx('census.stat.total').en}</span></div>
+      <div class="stat"><span class="n">{categories.length}</span><span class="label" data-i18n data-en={Tx('census.stat.categories').en} data-zh={Tx('census.stat.categories').zh}>{Tx('census.stat.categories').en}</span></div>
+      <div class="stat"><span class="n">{census.filter((r) => r.category === 'poaching').length}</span><span class="label" data-i18n data-en={Tx('census.stat.poaching').en} data-zh={Tx('census.stat.poaching').zh}>{Tx('census.stat.poaching').en}</span></div>
+      <div class="stat"><span class="n">{census.filter((r) => r.claim_verified === 'false' || r.outcome_documented === 'false' || r.animal_directly_harmed === 'false').length}</span><span class="label" data-i18n data-en={Tx('census.stat.presumed').en} data-zh={Tx('census.stat.presumed').zh}>{Tx('census.stat.presumed').en}</span></div>
     </div>
 
     <div class="filters">
-      <select id="f-category"><option value="">全部分类</option>
+      <select id="f-category"><option value="" data-i18n data-en={Tx('census.filter.all_categories').en} data-zh={Tx('census.filter.all_categories').zh}>{Tx('census.filter.all_categories').en}</option>
         {categories.map((c) => <option value={c}>{CENSUS_CATEGORY_LABEL[c] || c}</option>)}
       </select>
-      <select id="f-animal"><option value="">全部动物类型</option>
+      <select id="f-animal"><option value="" data-i18n data-en={Tx('census.filter.all_animals').en} data-zh={Tx('census.filter.all_animals').zh}>{Tx('census.filter.all_animals').en}</option>
         {animals.map((a) => <option value={a}>{a}</option>)}
       </select>
-      <input id="f-search" type="text" placeholder="搜索罪名/摘要关键词…" />
+      <input id="f-search" type="text" placeholder={Tx('census.filter.search_placeholder').en} data-i18n-placeholder data-en={Tx('census.filter.search_placeholder').en} data-zh={Tx('census.filter.search_placeholder').zh} />
     </div>
 
-    <p id="count-line" style="color: var(--text-muted); font-size: 0.88rem; margin: 4px 0 16px;"></p>
+    <p id="count-line" style="color: var(--text-muted); font-size: 0.88rem; margin: 4px 0 16px;"
+       data-i18n-count data-en-tpl={Tx('census.count_line').en} data-zh-tpl={Tx('census.count_line').zh}></p>
 
     <div id="list">
-      {census.map((r, idx) => (
-        <div class="census-item" data-category={r.category || ''} data-animal={r.animal || ''}
-             data-search={`${r.summary} ${r.charges} ${r.motive}`.toLowerCase()}>
-          <button class="census-row" data-target={`detail-${idx}`}>
-            <div class="meta-row">
-              <span class="badge-outline">{CENSUS_CATEGORY_LABEL[r.category] || r.category}</span>
-              <span class="badge-outline">{r.animal || '动物类型未确定'}</span>
-              <span class="badge-outline">{r.charges}</span>
-            </div>
-            <div class="summary">{r.summary}</div>
-          </button>
-          <div class="census-detail" id={`detail-${idx}`} hidden>
-            <p class="detail-label">{CENSUS_CATEGORY_LABEL[r.category]} — {CENSUS_CATEGORY_BLURB[r.category]}</p>
-            {(r.claim_verified === 'false' || r.outcome_documented === 'false' ||
-              r.animal_directly_harmed === 'false' || r.perpetrator_confirmed === 'false') && (
-              <p class="detail-flag">
-                证据透明标记：
-                {r.outcome_documented === 'false' && '判决未明写动物最终结局，按作案手段/动机与已确认案例一致推定纳入。'}
-                {r.claim_verified === 'false' && '相关指控（如下毒）未经判决认定为事实，采信声称本身计入。'}
-                {r.animal_directly_harmed === 'false' && '动物本身是否受伤未被证实。'}
-                {r.perpetrator_confirmed === 'false' && '伤害真实发生，但加害人身份未坐实。'}
-                {r.recovered_after_theft === 'true' && '盗窃既遂后动物被追回。'}
+      {census.map((r, idx) => {
+        const catEn = CENSUS_CATEGORY_LABEL_EN[r.category] || r.category;
+        const catZh = CENSUS_CATEGORY_LABEL[r.category] || r.category;
+        const blurbEn = CENSUS_CATEGORY_BLURB_EN[r.category] || '';
+        const blurbZh = CENSUS_CATEGORY_BLURB[r.category] || '';
+        const flagKeys = getFlagKeys(r);
+        const reviewEn = r.review_status === 'reviewed' ? t('census.review.human') : t('census.review.auto');
+        const reviewZh = r.review_status === 'reviewed' ? tZh('census.review.human') : tZh('census.review.auto');
+        const motiveEn = r.motive || t('census.motive_unextracted');
+        const motiveZh = r.motive || tZh('census.motive_unextracted');
+        const countEn = r.n_animals || t('census.count_unknown');
+        const countZh = r.n_animals || tZh('census.count_unknown');
+        const metaEn = t('census.meta_line', { id: r.census_id, charges: r.charges, motive: motiveEn, count: countEn, confidence: r.confidence, review: reviewEn });
+        const metaZh = tZh('census.meta_line', { id: r.census_id, charges: r.charges, motive: motiveZh, count: countZh, confidence: r.confidence, review: reviewZh });
+        return (
+          <div class="census-item" data-category={r.category || ''} data-animal={r.animal || ''}
+               data-search={`${r.summary} ${r.charges} ${r.motive}`.toLowerCase()}>
+            <button class="census-row" data-target={`detail-${idx}`}>
+              <div class="meta-row">
+                <span class="badge-outline" data-i18n data-en={catEn} data-zh={catZh}>{catEn}</span>
+                {r.animal
+                  ? <span class="badge-outline">{r.animal}</span>
+                  : <span class="badge-outline" data-i18n data-en={Tx('census.animal_unknown').en} data-zh={Tx('census.animal_unknown').zh}>{Tx('census.animal_unknown').en}</span>}
+                <span class="badge-outline">{r.charges}</span>
+              </div>
+              <div class="summary">{r.summary}</div>
+            </button>
+            <div class="census-detail" id={`detail-${idx}`} hidden>
+              <p class="detail-label">
+                <span data-i18n data-en={catEn} data-zh={catZh}>{catEn}</span> —{' '}
+                <span data-i18n data-en={blurbEn} data-zh={blurbZh}>{blurbEn}</span>
               </p>
-            )}
-            {r.correction_note && <p class="detail-note">人工审核说明：{r.correction_note}</p>}
-            <p class="detail-fact">{r.fact}</p>
-            <p class="detail-meta">
-              编号 {r.census_id} · 罪名 {r.charges} · 动机 {r.motive || '未提取'} ·
-              数量 {r.n_animals || '未确定'} · AI 分类置信度 {r.confidence} ·
-              审核方式 {r.review_status === 'reviewed' ? '人工审核' : '高置信自动纳入'}
-            </p>
+              {flagKeys.length > 0 && (
+                <p class="detail-flag">
+                  <span data-i18n data-en={Tx('census.flag_label').en} data-zh={Tx('census.flag_label').zh}>{Tx('census.flag_label').en}</span>
+                  {flagKeys.map((k) => <span data-i18n data-en={Tx(k).en} data-zh={Tx(k).zh}>{Tx(k).en} </span>)}
+                </p>
+              )}
+              {r.correction_note && (
+                <p class="detail-note">
+                  <span data-i18n data-en={Tx('census.note_label').en} data-zh={Tx('census.note_label').zh}>{Tx('census.note_label').en}</span>{r.correction_note}
+                </p>
+              )}
+              <p class="detail-fact-note" data-i18n data-en={Tx('census.fact_untranslated').en} data-zh={Tx('census.fact_untranslated').zh}>{Tx('census.fact_untranslated').en}</p>
+              <p class="detail-fact">{r.fact}</p>
+              <p class="detail-meta" data-i18n data-en={metaEn} data-zh={metaZh}>{metaEn}</p>
+            </div>
           </div>
-        </div>
-      ))}
+        );
+      })}
     </div>
   </div>
 
@@ -100,10 +134,13 @@ const animals = [...new Set(census.map((r) => r.animal).filter(Boolean))].sort()
         el.style.display = show ? '' : 'none';
         if (show) shown++;
       }
-      countLine.textContent = `显示 ${shown} / ${items.length} 条`;
+      const locale = window.AHID_LOCALE || 'en';
+      const tpl = locale === 'zh' ? countLine.dataset.zhTpl : countLine.dataset.enTpl;
+      countLine.textContent = tpl.replace('{shown}', shown).replace('{total}', items.length);
     }
     for (const el of [categorySel, animalSel]) el.addEventListener('change', applyFilters);
     searchInput.addEventListener('input', applyFilters);
+    window.addEventListener('ahid-locale-changed', applyFilters);
     applyFilters();
 
     // Expand/collapse -- one item at a time is not enforced, visitors can open
@@ -158,6 +195,12 @@ const animals = [...new Set(census.map((r) => r.animal).filter(Boolean))].sort()
       color: var(--text-muted);
       font-style: italic;
       margin-bottom: 10px;
+    }
+    .detail-fact-note {
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      font-style: italic;
+      margin-bottom: 6px;
     }
     .detail-fact {
       white-space: pre-wrap;

@@ -12,6 +12,15 @@ export const STATUS_LABEL = {
   AF: '错误归属/谣言',
 };
 
+export const STATUS_LABEL_EN = {
+  A1: 'Auto-collected',
+  A2: 'Machine-linked',
+  A3: 'Multi-source corroborated',
+  A4: 'Authoritative record',
+  AX: 'Disputed',
+  AF: 'Misattributed / rumor',
+};
+
 export const STATUS_BLURB = {
   A1: '系统已保存公开来源，但核心信息尚不足以形成多方印证的事件档案。',
   A2: '多个来源或媒体被系统归并为同一候选事件，但部分时间、地点或背景仍未确认。',
@@ -77,4 +86,24 @@ export const CENSUS_CATEGORY_BLURB = {
   cruelty: '动物是暴力的直接目标——判决认定或有力指控存在直接针对动物的伤害行为。',
   retaliation: '因偷狗指控、纠纷或其他争执而报复行为人本人，动物伤害是争议的起因或背景，不是本案暴力的直接目标。',
   other_true: '判决认定的真实动物伤害，不完全符合以上四类的核心特征（如宠物医疗纠纷死亡）。',
+};
+
+// English counterparts, hand-translated for the site's language toggle (see
+// src/lib/i18n.js). Kept as a separate map rather than merged into the
+// dictionaries above so the Chinese labels stay the single source of truth
+// for anything that isn't yet wired into the toggle.
+export const CENSUS_CATEGORY_LABEL_EN = {
+  poaching: 'Dog theft / poaching',
+  property_protection: 'Crop/livestock-guarding poisoning',
+  cruelty: 'Deliberate cruelty',
+  retaliation: 'Retaliation',
+  other_true: 'Other confirmed harm',
+};
+
+export const CENSUS_CATEGORY_BLURB_EN = {
+  poaching: 'The judgment records a dog-theft/poaching episode (completed, attempted, or strongly alleged). Most are prosecuted as theft, robbery, or food-safety offenses rather than animal-specific charges.',
+  property_protection: 'Poison set out to protect crops from wildlife or to guard property killed a neighbor’s livestock or pet. Distinguished from deliberate cruelty by the motive field.',
+  cruelty: 'The animal was the direct target of violence -- the judgment establishes or strongly alleges harm aimed directly at the animal.',
+  retaliation: 'The perpetrator retaliated against a person over a theft accusation or other dispute; the animal harm is the trigger or backdrop, not the direct target of the violence in this case.',
+  other_true: 'Real animal harm established by the judgment that doesn’t fit the core pattern of the four categories above (e.g. a pet veterinary dispute resulting in death).',
 };
